@@ -21,14 +21,14 @@ jobs:
           mkdir -p out
           gh run download "$RUN_ID" -R "$REPO" --name Arrakis-Atlas-APK-and-test -D out
           test -s out/app/build/outputs/apk/debug/app-debug.apk
-          cp out/app/build/outputs/apk/debug/app-debug.apk Arrakis_Atlas_2026_v1.0.5.apk
+          cp out/app/build/outputs/apk/debug/app-debug.apk Arrakis_Atlas_2026_v1.0.6.apk
       - name: Publish beta APK as directly downloadable release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
         run: |
-          if gh release view v1.0.5 -R "$REPO" >/dev/null 2>&1; then
-            gh release upload v1.0.5 Arrakis_Atlas_2026_v1.0.5.apk -R "$REPO" --clobber
+          if gh release view v1.0.6 -R "$REPO" >/dev/null 2>&1; then
+            gh release upload v1.0.6 Arrakis_Atlas_2026_v1.0.6.apk -R "$REPO" --clobber
           else
-            gh release create v1.0.5 Arrakis_Atlas_2026_v1.0.5.apk -R "$REPO" --title "Arrakis Atlas 1.0.5 (Beta)" --prerelease --notes "Erste Android-Beta mit Suchfunktion, Händler- und Materialfiltern und starkem Kartenzoom. Enthält noch keine vollständige Händlerdatenbank. APK wurde im GitHub-Workflow gebaut und auf einem Android-Emulator auf Startabstürze geprüft. Debug-signiert: ältere handgebaute Versionen vor der Installation entfernen."
+            gh release create v1.0.6 Arrakis_Atlas_2026_v1.0.6.apk -R "$REPO" --title "Arrakis Atlas 1.0.6 (Beta)" --prerelease --notes "Erste Android-Beta mit Suchfunktion, Händler- und Materialfiltern und starkem Kartenzoom. Enthält noch keine vollständige Händlerdatenbank. APK wurde im GitHub-Workflow gebaut und auf einem Android-Emulator auf Startabstürze geprüft. Debug-signiert: ältere handgebaute Versionen vor der Installation entfernen."
           fi
