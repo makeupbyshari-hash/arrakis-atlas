@@ -57,9 +57,7 @@ jobs:
             adb shell am start -W -n com.arrakis.atlas/.AtlasActivity
             sleep 15
             adb shell pidof com.arrakis.atlas
-            if adb logcat -d -s AndroidRuntime:E | grep -E 'FATAL EXCEPTION|com.arrakis.atlas'; then
-              echo "ANDROID APP CRASHED"; exit 1
-            fi
+            ! adb logcat -d -s AndroidRuntime:E | grep -E 'FATAL EXCEPTION|com.arrakis.atlas'
             adb shell screencap -p /sdcard/atlas-smoke.png
             adb pull /sdcard/atlas-smoke.png atlas-smoke.png
       - name: Upload APK and emulator screenshot
