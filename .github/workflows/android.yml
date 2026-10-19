@@ -38,6 +38,14 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
+      - name: Download GPL-licensed offline map images
+        run: |
+          curl -fL --retry 3 --max-time 180 https://raw.githubusercontent.com/Abarrach/La-maison-des-Havres-Gris/main/map.jpg -o app/src/main/assets/map.jpg
+          curl -fL --retry 3 --max-time 180 https://raw.githubusercontent.com/Abarrach/La-maison-des-Havres-Gris/main/deep_desert.jpg -o app/src/main/assets/deep_desert.jpg
+          curl -fL --retry 3 --max-time 60 https://raw.githubusercontent.com/Abarrach/La-maison-des-Havres-Gris/main/LICENSE -o app/src/main/assets/map-license.txt
+          test $(stat -c%s app/src/main/assets/map.jpg) -gt 1000000
+          test $(stat -c%s app/src/main/assets/deep_desert.jpg) -gt 1000000
+          file app/src/main/assets/map.jpg app/src/main/assets/deep_desert.jpg
       - name: Build debug APK
         run: gradle :app:assembleDebug --stacktrace
       - name: Enable Android emulator acceleration
