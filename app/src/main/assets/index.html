@@ -5,7 +5,7 @@
 </style></head><body><div id="app"><header><div><h1>◇ ARRAKIS ATLAS</h1><small>Dune: Awakening · Beta 2026</small></div><strong>Nur deine Auswahl</strong></header>
 <div class="search"><input id="q" placeholder="Händler, Jodtabletten, Rohstoff ..." aria-label="Suchen"><select id="region" aria-label="Kartengebiet"><option value="hagga">Hagga-Becken</option><option value="deep">Tiefe Wüste</option></select></div>
 <nav class="filters" aria-label="Kartenfilter"><button data-filter="wander">Wanderhändler</button><button data-filter="trader">Feste Händler</button><button data-filter="resource">Materialien</button><button data-filter="place">Gebiete</button><button id="clear">Alles ausblenden</button></nav>
-<main><div id="viewport"><div id="world"><img id="mapimg" alt="Spielkarte"><div id="fallback"></div><div id="markers"></div><div class="regionlabel" id="label"></div></div></div><div id="tip">2 Finger zoomen · 1 Finger verschieben · gestrichelte Kreise = ungefähre Gebiete</div><div id="results"></div><div id="zoom"><button id="plus" aria-label="Vergrößern">+</button><button id="minus" aria-label="Verkleinern">−</button><button id="reset" aria-label="Zurücksetzen">⌂</button></div><div id="detail"></div></main><div class="footnote">Beta: noch nicht alle Händler erfasst. Dynamische Spawnorte sind nicht garantiert.</div></div>
+<main><div id="viewport"><div id="world"><img id="mapimg" alt="Spielkarte"><div id="fallback"></div><div id="markers"></div><div class="regionlabel" id="label"></div></div></div><div id="tip">2 Finger zoomen · 1 Finger verschieben · gestrichelte Kreise = ungefähre Gebiete</div><div id="results"></div><div id="zoom"><button id="plus" aria-label="Vergrößern">+</button><button id="minus" aria-label="Verkleinern">−</button><button id="reset" aria-label="Zurücksetzen">⌂</button></div><div id="detail"></div></main><div class="footnote">Beta: noch nicht alle Händler erfasst. Dynamische Spawnorte sind nicht garantiert. Kartenbasis: Abarrach/La-maison-des-Havres-Gris (GPL-3.0), lizenzierte Community-Karte.</div></div>
 <script>
 (()=>{'use strict';
 const data=[
@@ -17,7 +17,7 @@ const data=[
 {id:'sheol',name:'Sheol – Strahlungsgebiet',kind:'place',area:'hagga',x:14,y:82,place:'Südwestliches Hagga-Becken.',goods:[],details:'Hier gibt es strahlenbelastete Ressourcen und dynamische Begegnungen.',source:'https://dune.gaming.tools/hagga-basin'},
 {id:'deep',name:'Tiefe Wüste – wechselnde Wochenkarte',kind:'place',area:'deep',x:50,y:50,place:'Tiefe Wüste – Layout kann nach Coriolis-Stürmen wechseln.',goods:[],details:'Ohne bestätigte aktuelle Wochenkarte werden keine erfundenen Fundstellen angezeigt.',source:'https://dune.gaming.tools/deep-desert'}
 ];
-const maps={hagga:'https://raw.githubusercontent.com/Abarrach/La-maison-des-Havres-Gris/main/map.jpg',deep:'https://raw.githubusercontent.com/Abarrach/La-maison-des-Havres-Gris/main/deep_desert.jpg'};
+const maps={hagga:'file:///android_asset/map.jpg',deep:'file:///android_asset/deep_desert.jpg'};
 const $=id=>document.getElementById(id),v=$('viewport'),w=$('world'),img=$('mapimg'),markers=$('markers'),q=$('q'),r=$('region'),results=$('results'),detail=$('detail');
 const selected=new Set();let scale=1,tx=0,ty=0;const SIZE=1100,pointers=new Map();let gesture=null;
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
