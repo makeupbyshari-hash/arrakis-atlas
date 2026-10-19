@@ -40,6 +40,10 @@ jobs:
           gradle-version: '8.10.2'
       - name: Build debug APK
         run: gradle :app:assembleDebug --stacktrace
+      - name: Enable Android emulator acceleration
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+          ls -l /dev/kvm || true
       - name: Launch on Android emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
