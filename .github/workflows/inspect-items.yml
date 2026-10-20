@@ -11,28 +11,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Public API data availability and fields
+      - name: Inspect public item list response schema
         run: |
           python3 - <<'PY'
-          import json,urllib.request,urllib.error
-          for url in ('https://api.awakening.wiki/items/count','https://api.awakening.wiki/items?limit=2','https://api.awakening.wiki/openapi.json'):
+          import json, urllib.request
+          from urllib.parse import urlencode
+          qslist=[{'limit':3},{'limit':3,'page':2},{'limit':3,'search':'industrial pump'}]
+          for qs in qslist:
+              url='https://api.awakening.wiki/items?'+urlencode(qs)
               print('URL:',url)
               try:
-                  req=urllib.request.Request(url,headers={'User-Agent':'ArrakisAtlas-open-source-research/0.1'})
-                  with urllib.request.urlopen(req,timeout=18) as r:
-                      body=r.read(5000000)
-                      data=json.loads(body)
-                  if isinstance(data,list):
-                      print('list items:',len(data), 'first keys:',list(data[0])[:35] if data and isinstance(data[0],dict) else '')
-                      if data and isinstance(data[0],dict):print('first name:',data[0].get('name'), 'second:',data[1].get('name') if len(data)>1 else '')
-                  elif isinstance(data,dict):
-                      print('keys:',list(data)[:35])
-                      if 'paths' in data:print('paths:',list(data['paths'])[:30])
-                      for k in ('results','data','items'):
-                          if isinstance(data.get(k),list):
-                              print('collection',k,'len:',len(data[k]),'first keys:',list(data[k][0])[:35] if data[k] and isinstance(data[k][0],dict) else '')
-                      for k in ('count','total','total_count'):print(k,data.get(k))
-                  else:print('value type:',type(data).__name__)
-              except Exception as e:
-                  print('ERROR',type(e).__name__,str(e)[:300])
+                  req=urllib.request.Request(url,headers={'User-Agent':'ArrakisAtlas/0.2 (public game item research)'})
+                  with urllib.request.urlopen(req,timeout=20) as response: payload=json.load(response)
+                  print('top level keys:',list(payload) if isinstance(payload,dict) else type(payload).__name__)
+                  if isinstance(payload,dict):
+                      print('pageInfo:',json.dumps(payload.get('pageInfo'),ensure_ascii=False)[:1000])
+                      entries=payload.get('list',[])
+                      print('list count:',len(entries))
+                      for row in entries[:2]:
+                          print('item keys:',list(row)[:45], 'name:',row.get('name'), 'id:',row.get('id'))
+                          print('item sample:',json.dumps(row,ensure_ascii=False)[:2000])
+              except Exception as e:print('ERR',str(e)[:400])
           PY
