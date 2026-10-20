@@ -23,6 +23,12 @@ jobs:
           packages: platform-tools
       - name: Install SDK requirements
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Generate complete offline Dune item catalog
+        run: |
+          python3 tools/fetch_items.py
+          test $(stat -c%s app/src/main/assets/items.js) -gt 150000
+          grep -q 'Industrial Pump' app/src/main/assets/items.js
+          grep -q 'Complex Machinery' app/src/main/assets/items.js
       - name: Validate embedded UI JavaScript
         run: |
           python3 - <<'PY'
@@ -34,6 +40,7 @@ jobs:
           Path('/tmp/atlas.js').write_text(m.group(1))
           PY
           node --check /tmp/atlas.js
+          node --check app/src/main/assets/items.js
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
