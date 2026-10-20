@@ -1,48 +1,287 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>Arrakis Atlas</title>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Arrakis Atlas</title>
 <style>
-:root{color-scheme:dark;--bg:#10191e;--fg:#f8efd9;--muted:#b4bdc0;--gold:#f1bd73;--line:#34434b}*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px system-ui,Roboto,sans-serif;color:var(--fg)}button,input,select{font:inherit}button{cursor:pointer}#app{display:flex;flex-direction:column;height:100dvh}header{background:#15232a;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}h1{font-size:18px;margin:0;color:var(--gold)}header small{color:var(--muted);font-size:11px}header strong{font-size:12px;color:#d0e4d4}.search{padding:9px;background:#1a282f;display:flex;gap:7px}.search input{min-width:0;flex:1;padding:12px;border:1px solid #546770;background:#101a1e;color:white;border-radius:10px}.search select{width:35%;max-width:130px;background:#101a1e;color:var(--fg);border:1px solid #546770;border-radius:10px}.filters{display:flex;gap:7px;overflow-x:auto;padding:8px 10px;background:#1a282f;border-bottom:1px solid var(--line);scrollbar-width:thin}.filters button{border:1px solid #52636d;background:#273740;color:var(--fg);padding:8px 11px;border-radius:20px;white-space:nowrap}.filters button.on{border-color:var(--gold);background:#5b4327;color:#ffe7ba}main{flex:1;position:relative;overflow:hidden;background:#29271f}#viewport{position:absolute;inset:0;overflow:hidden;touch-action:none;cursor:grab}#world{position:absolute;top:0;left:0;width:1100px;height:1100px;transform-origin:0 0;background:radial-gradient(#827052,#312e28);border:2px solid #b2986a;will-change:transform}#mapimg{width:100%;height:100%;object-fit:fill;display:block;user-select:none;-webkit-user-drag:none}#fallback{position:absolute;inset:0;display:none;background:repeating-linear-gradient(0deg,transparent,transparent 108px,#ffffff18 109px,#ffffff18 110px),repeating-linear-gradient(90deg,transparent,transparent 108px,#ffffff18 109px,#ffffff18 110px),radial-gradient(#5b513d,#242d2f)}#markers{position:absolute;inset:0}.pin{position:absolute;transform:translate(-50%,-50%);border:2px dashed #ffe6aa;background:#8b5435cb;border-radius:100%;width:95px;height:95px;color:white;font-size:31px;display:grid;place-items:center;text-shadow:0 1px 6px black;box-shadow:0 3px 12px #000a}.pin.resource{background:#276f6aab;border-color:#93e7d9}.pin.place{background:#365677bb;border-color:#beddf3}.regionlabel{position:absolute;left:4%;top:90%;font-size:24px;font-weight:800;color:#fff7df;text-shadow:0 1px 8px black;pointer-events:none}#tip{position:absolute;top:10px;left:10px;right:65px;color:white;background:#192831dc;border:1px solid #6a6852;border-radius:9px;padding:7px 9px;font-size:12px;pointer-events:none;max-width:400px}#zoom{position:absolute;bottom:15px;right:12px;display:grid;gap:7px}#zoom button{border:1px solid #b78d58;background:#16242bea;color:var(--fg);font-size:23px;border-radius:10px;width:47px;height:45px}#results{display:none;position:absolute;z-index:3;top:8px;left:8px;right:8px;max-height:47%;overflow:auto;background:#111e23ee;border:1px solid #a78a5f;border-radius:12px;padding:7px}#results button{display:block;width:100%;color:var(--fg);background:#23333b;border:none;text-align:left;margin:3px 0;padding:9px;border-radius:8px}#results small{display:block;color:var(--muted)}#results .close{background:#5a3b2c;text-align:right}#detail{display:none;position:absolute;z-index:4;bottom:0;left:0;right:0;max-height:70%;overflow:auto;padding:18px;background:#14232bf5;border-top:2px solid var(--gold);border-radius:17px 17px 0 0;box-shadow:0 -10px 30px #0007}#detail h2{color:var(--gold);margin:0 0 6px;font-size:21px}#detail p{line-height:1.45}#detail .close{float:right;background:#2b3a42;color:white;border:1px solid #5c6d73;padding:7px;border-radius:8px}#detail a{color:#f9c78f}.footnote{font-size:12px;color:#d6c2a5;background:#1c292e;padding:5px 10px}
-.filters button,.search input,.search select{min-height:44px}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #ffd08b;outline-offset:2px}.pin.farm{background:#705630bf;border-color:#ffe2a7}.pin{touch-action:manipulation}#detail{font-size:16px;line-height:1.5}#results button{min-height:45px}#results .catalog{border-left:3px solid #6da7a3}#results .note{font-size:13px;padding:10px;color:#deccb5}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}</style></head><body><div id="app"><header><div><h1>◇ ARRAKIS ATLAS</h1><small>Dune: Awakening · Beta 2026</small></div><strong>Nur deine Auswahl</strong></header>
-<div class="search"><input id="q" placeholder="Gegenstand, Händler oder Farmspot ..." aria-label="Suchen"><select id="region" aria-label="Kartengebiet"><option value="hagga">Hagga-Becken</option><option value="deep">Tiefe Wüste</option></select></div>
-<nav class="filters" aria-label="Kartenfilter"><button data-filter="wander">Wanderhändler</button><button data-filter="trader">Feste Händler</button><button data-filter="resource">Erze & Materialien</button><button data-filter="farm">Farmspots</button><button data-filter="place">Gebiete</button><button id="clear">Alles ausblenden</button></nav>
-<main><div id="viewport"><div id="world"><img id="mapimg" alt="Spielkarte"><div id="fallback"></div><div id="markers"></div><div class="regionlabel" id="label"></div></div></div><div id="tip">2 Finger zoomen · 1 Finger verschieben · gestrichelte Kreise = ungefähre Gebiete</div><div id="results"></div><div id="zoom"><button id="plus" aria-label="Vergrößern">+</button><button id="minus" aria-label="Verkleinern">−</button><button id="reset" aria-label="Zurücksetzen">⌂</button></div><div id="detail"></div></main><div class="footnote">Beta: Item-Katalog offline durchsuchbar. Fundorte nur bei verifizierten Hinweisen; Marker zeigen ungefähre Regionen. Händler und Spawns nicht garantiert. Kartenbasis: Abarrach/La-maison-des-Havres-Gris (GPL-3.0), lizenzierte Community-Karte.</div></div>
+:root{color-scheme:dark;--bg:#111b22;--panel:#192730;--panel2:#22323d;--ink:#f5f0e5;--muted:#c0cad1;--stroke:#455661;--gold:#f1cc8f;--goldBg:#65502e;--blue:#a7d4e3;--blueBg:#284a5d;--violet:#c9b2fa;--violetBg:#4d406f}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,Roboto,Arial,sans-serif}
+button,input,select{font:inherit}button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f7d89d;outline-offset:2px}
+#app{height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+header{min-height:58px;padding:9px 14px;display:flex;justify-content:space-between;gap:12px;align-items:center;background:#15232a;border-bottom:1px solid #3c4d55}
+header .brand{font-weight:780;letter-spacing:.03em;font-size:18px;color:var(--gold)}
+header small{font-size:11px;display:block;letter-spacing:0;color:var(--muted);font-weight:450}
+header .privacy{font-size:12px;text-align:right;color:#c2dbd9}
+.tools{padding:10px 10px 7px;background:var(--panel);display:flex;gap:8px;align-items:stretch}
+.searchbox{display:flex;min-width:0;flex:1;position:relative}
+input{width:100%;min-width:0;color:#fff;padding:12px 44px 12px 12px;background:#0e1b22;border:1px solid #58727b;border-radius:11px;min-height:47px}
+input::placeholder{color:#b6c5c9;opacity:1}
+#clearSearch{position:absolute;right:4px;top:3px;bottom:3px;width:39px;color:#f0e6cf;background:none;border:0;font-size:24px}
+#region{max-width:127px;width:34%;min-width:109px;min-height:47px;padding:8px 5px;border-radius:11px;background:#102029;color:var(--ink);border:1px solid #58727b}
+.filters{display:flex;gap:7px;overflow-x:auto;scrollbar-width:thin;padding:6px 10px 10px;background:var(--panel);border-bottom:1px solid #3d4d58}
+.filters button{white-space:nowrap;border:1px solid #58727b;border-radius:20px;padding:8px 13px;min-height:39px;color:#e6eaf0;background:#263844}
+.filters button.active{background:var(--goldBg);color:#ffebc3;border-color:var(--gold)}
+#suggestions{position:absolute;z-index:30;top:144px;left:9px;right:9px;max-height:48%;overflow:auto;background:#18282ff9;border:1px solid #9c927d;box-shadow:0 13px 35px #0009;border-radius:12px;padding:6px}
+#suggestions[hidden],#spotList[hidden],#selectionBar[hidden],#details[hidden]{display:none}
+.suggest{display:block;width:100%;background:#263940;color:var(--ink);text-align:left;border:0;border-bottom:1px solid #4a5963;padding:10px;border-radius:6px;min-height:52px}
+.suggest b{display:block;font-size:15px}.suggest small{font-size:12px;color:#beced3}
+#mapframe{position:relative;min-height:150px;flex:1;overflow:hidden;background:radial-gradient(ellipse at center,#524c3d,#252b2d);touch-action:none;cursor:grab}
+#world{position:absolute;top:0;left:0;width:1100px;height:1100px;transform-origin:0 0;will-change:transform;pointer-events:none;background:#292e2f}
+#tilelayer{position:absolute;inset:0;overflow:hidden}
+.tile{position:absolute;display:block;user-select:none;-webkit-user-drag:none;pointer-events:none}
+#pins{position:absolute;inset:0;pointer-events:none}
+.pin{position:absolute;z-index:2;display:flex;align-items:center;justify-content:center;min-width:41px;height:41px;padding:0 8px;transform:translate(-50%,-50%);border-radius:22px;border:2px solid #fff9d1;color:#fff;font-weight:780;font-size:15px;text-shadow:0 1px 3px #000c;box-shadow:0 2px 8px #000a;pointer-events:auto;white-space:nowrap}
+.pin.best{background:#8b652d;border-color:#ffe1a5}
+.pin.alternative{background:#376276;border-color:#c6edfa}
+.pin.possible{background:#514c65;border-color:#c7bbdc;border-style:dashed}
+.pin.trader{background:#554577;border-color:#d6bbfb}
+.pin .pinlabel{font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;text-shadow:none}
+.pin .pinicon{font-size:18px}
+#mapHint{position:absolute;left:9px;top:10px;max-width:calc(100% - 78px);pointer-events:none;border-radius:8px;background:#101c24e5;color:#e4e8ec;padding:7px 9px;font-size:12px}
+.zoom{position:absolute;right:10px;bottom:14px;display:grid;gap:6px}
+.zoom button{display:grid;place-items:center;width:47px;height:47px;font-size:24px;border:1px solid #bfad86;border-radius:10px;color:#ffefd6;background:#182a33ec;box-shadow:0 3px 10px #0005}
+#selectionBar{background:#172830;border-top:1px solid #55656a;padding:10px 13px;max-height:105px}
+#selectionBar b{color:var(--gold);display:block;font-size:16px}
+#selectionBar small{display:block;color:#c6d2d5;margin-top:3px}
+#selectionBar .legend{font-size:12px;margin-top:4px;color:#d6dfdf}
+.dot{width:10px;height:10px;display:inline-block;border-radius:50%;vertical-align:middle;margin:0 4px 0 9px}
+.dot.gold{background:#f1c078}.dot.blue{background:#8cc2d5}.dot.gray{background:#9a92ae}
+#spotList{padding:8px 10px;max-height:30%;overflow:auto;display:grid;gap:6px;border-top:1px solid #475863;background:#182832}
+.spot{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;min-height:53px;text-align:left;color:var(--ink);padding:9px 10px;background:#273a44;border:1px solid #455e6b;border-radius:10px}
+.spot strong{display:block;font-size:14px}.spot small{color:#cad2d7;font-size:12px}.spot .status{font-size:12px;text-align:right;min-width:85px}
+.spot .status.best{color:#ffda97}.spot .status.alternative{color:#bbdfec}.spot .status.possible{color:#d6c8e5}
+#details{position:absolute;z-index:50;bottom:0;left:0;right:0;max-height:76%;overflow:auto;background:#172731;box-shadow:0 -10px 28px #0009;border-top:2px solid var(--gold);border-radius:15px 15px 0 0;padding:17px}
+#details h2{margin:3px 0 9px;font-size:20px;line-height:1.3;color:#ffddaa}#details p{line-height:1.55;margin:10px 0}
+#details a{color:#f9cc91}#details .close{float:right;background:#2e424c;color:white;border:1px solid #778890;padding:8px 11px;border-radius:9px;min-height:42px}
+#details .mini{font-size:12px;color:#c4d0d6}
+footer{background:#172630;color:#b3c7ce;padding:6px 11px;font-size:11px;line-height:1.3}
+@media (max-width:375px){.brand{font-size:16px!important}#region{min-width:99px!important}.filters button{padding:7px 9px}.spot small{font-size:11px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style></head><body>
+<div id="app">
+<header><div class="brand">◇ ARRAKIS ATLAS<small>Interaktive Dune-Karte · Oktober 2026</small></div><div class="privacy">Ruhige Ansicht<br><small>Offline · ohne Konto</small></div></header>
+<div class="tools"><div class="searchbox"><input id="search" type="search" enterkeyhint="search" autocomplete="off" spellcheck="false" aria-label="Gegenstand oder Händler suchen" placeholder="Item, Händler, Ort ..."><button id="clearSearch" aria-label="Suche leeren">×</button></div><select id="region" aria-label="Karte wählen"><option value="hagga">Hagga</option><option value="deep">Tiefe Wüste</option></select></div>
+<div class="filters"><button data-mode="farms">Farmspots</button><button data-mode="resources">Erzgebiete</button><button data-mode="traders">Händler</button><button data-mode="places">Orte</button><button id="clearAll">Alles aus</button></div>
+<div id="suggestions" role="listbox" aria-label="Suchvorschläge" hidden></div>
+<div id="mapframe"><div id="world"><div id="tilelayer"></div></div><div id="pins"></div><div id="mapHint">2 Finger = Zoom · 1 Finger = Verschieben</div><div class="zoom"><button id="plus" aria-label="Vergrößern">+</button><button id="minus" aria-label="Verkleinern">−</button><button id="reset" aria-label="Ganze Karte anzeigen">⌂</button></div><div id="details" hidden></div></div>
+<div id="selectionBar" hidden></div><div id="spotList" hidden></div>
+<footer>Gold = guter Farmspot · Blau = weitere Quelle · Gestrichelt = unsicher / dynamisch · Positionen teils nur ungefähre Gebiete.</footer>
+</div>
 <script src="items.js"></script>
 <script>
-(()=>{'use strict';
-const data=[
-{id:'arkady',name:'Arkady Demidenko',kind:'wander',area:'hagga',x:14,y:78,place:'Sheol: mögliche dynamische Begegnungen am Rand des radioaktiven Gebiets; weitere Spielerberichte nennen den Übergang nach Mysa Tarill.',goods:['Jodtabletten','Jasmiumkristalle','Verstrahlte Schlacke'],details:'Nicht dauerhaft an einer festen Position. Achte auf rote Signalraketen und provisorische Händlerlager.',source:'https://dune.gaming.tools/hagga-basin'},
-{id:'aliza',name:'Aliza Decastille',kind:'wander',area:'hagga',x:67,y:47,place:'Gemeldete Regionen: Östliche Vermillius-Kluft, Hagga-Rift, Östlicher Schildwall, Mysa Tarill.',goods:['Tausch: Kupfer-Schweißdraht gegen Agavensamen'],details:'Dynamische Händlerin. Markierung ist nur eine grobe Suchregion.',source:'https://duneawakeningwiki.de/index.php?title=Dynamische_Begegnungen'},
-{id:'shahbazi',name:'Shahbazi Hoon',kind:'wander',area:'hagga',x:64,y:45,place:'Gemeldete Regionen: Vermillius-Kluft, Jabal Eifrit Al-sharq, Östlicher Schildwall, Mysa Tarill.',goods:['Tausch: Treibstoffzellen gegen Solari'],details:'Dynamischer Schrotthändler, keine dauerhafte Position. Handel laut Community-Wiki.',source:'https://duneawakeningwiki.de/index.php?title=Dynamische_Begegnungen'},
-{id:'jasmium',name:'Jasmiumkristalle',kind:'resource',area:'hagga',x:15,y:84,place:'Sheol, radioaktives Gebiet im südwestlichen Hagga-Becken.',goods:[],details:'Grobes Abbaugebiet, keine garantierte Einzelader. Schutz vor Strahlung nötig.',source:'https://dune.gaming.tools/hagga-basin'},
-{id:'agave',name:'Agavensamen',kind:'resource',area:'hagga',x:36,y:66,place:'O’odham und weitere Agaven-Fundgebiete.',goods:[],details:'Zutat für Jodtabletten. Die Markierung ist nicht punktgenau.',source:'https://dune.gaming.tools/hagga-basin'},
-{id:'sheol',name:'Sheol – Strahlungsgebiet',kind:'place',area:'hagga',x:14,y:82,place:'Südwestliches Hagga-Becken.',goods:[],details:'Hier gibt es strahlenbelastete Ressourcen und dynamische Begegnungen.',source:'https://dune.gaming.tools/hagga-basin'},
-{id:'pumps',name:'Industriepumpe / Industrial Pump',kind:'farm',area:'hagga',x:78,y:37,place:'Sentinel City, Östlicher Schildwall (Eastern Shield Wall). Kartenkreis nur grober Regionshinweis – keine genaue Koordinate.',goods:['Industriepumpe','Industrial Pump'],details:'Farmroute: Kisten in Sentinel City durchsuchen. Weitere mögliche Quellen: abgestürzte Schiffe und einige Prüfstations- oder Tiefwüste-Truhen. Alternativ Händler Zoe (Warenbestand kann variieren).',source:'https://awakening.wiki/Industrial_Pump'},
-{id:'complex',name:'Komplexe Maschinen / Complex Machinery',kind:'farm',area:'hagga',x:39,y:64,place:'Ironworks / Eisenwerke der westlichen und östlichen Vermillius-Kluft. Kreis steht nur für eine ungefähre Suchregion, nicht für den Gebäudepunkt.',goods:['Komplexe Maschinen','Complex Machinery'],details:'Bewährte Farmroute: die Ironworks-Anlagen nacheinander ablaufen, Fabrikmaschinen durchsuchen; in den Fabriken braucht man teils ein ID-Band. Beute hängt von Respawn und Zufall ab.',source:'https://www.method.gg/dune-awakening/where-to-find-farm-complex-machinery-in-dune-awakening'},
-{id:'iron',name:'Eisenerz / Iron Ore',kind:'resource',area:'hagga',x:41,y:61,place:'Vermillius-Kluft, besonders eisenhaltige Felsgebiete sowie das Umfeld der Eisenwerke. Kreismarkierung ist sehr grob.',goods:['Eisenerz','Iron Ore'],details:'Grobes Erzgebiet statt einzelner Erzader. Survey-Probe einsetzen und Ressourcendichte der Zone im Spiel prüfen.',source:'https://awakening.wiki/Southwest_Ironworks'},
-{id:'copper',name:'Kupfererz / Copper Ore',kind:'resource',area:'hagga',x:55,y:78,place:'Südliches Hagga-Becken und weitere frühe Hagga-Ressourcenzonen (grobe Orientierung).',goods:['Kupfererz','Copper Ore'],details:'Die einzelne Erzader ist nicht garantiert; Survey-Probe zeigt für jede Zone, ob Kupfer und hohe Ressourcendichte vorhanden sind.',source:'https://duneawakening.th.gl/guides/Copper%20Ore'},
-{id:'deep',name:'Tiefe Wüste – wechselnde Wochenkarte',kind:'place',area:'deep',x:50,y:50,place:'Tiefe Wüste: Mehrspieler-Layouts wechseln; Einzelspieler verwendet einen eigenen festen Aufbau.',goods:[],details:'Ohne bestätigte aktuelle Wochenkarte werden keine erfundenen Fundstellen angezeigt.',source:'https://dune.gaming.tools/deep-desert'}
-];
-const catalog=Array.isArray(window.ARRAKIS_ITEMS)?window.ARRAKIS_ITEMS:[];
-const aliases={'industriepumpe':'industrial pump','komplexe maschinen':'complex machinery','eisenerz':'iron ore','kupfererz':'copper ore','jodtabletten':'iodine pills'};
-const maps={hagga:'file:///android_asset/map.jpg',deep:'file:///android_asset/deep_desert.jpg'};
-const $=id=>document.getElementById(id),v=$('viewport'),w=$('world'),img=$('mapimg'),markers=$('markers'),q=$('q'),r=$('region'),results=$('results'),detail=$('detail');
-const selected=new Set();let scale=1,tx=0,ty=0;const SIZE=1100,pointers=new Map();let gesture=null;
+(function(){
+'use strict';
+const WORLD=1100,TILE=512,MAX_TILE_Z=4;
+const $=id=>document.getElementById(id);
+const frame=$('mapframe'),world=$('world'),tilelayer=$('tilelayer'),pins=$('pins'),search=$('search'),region=$('region'),suggestions=$('suggestions'),selectionBar=$('selectionBar'),spotList=$('spotList'),details=$('details'),hint=$('mapHint');
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','&#39;':'&#39;'}[c]||'&#39;'));
-const kind=k=>({wander:'Dynamischer Händler',trader:'Fester Händler',resource:'Rohstoff / Zutat',farm:'Farmspot',catalog:'Gegenstandskatalog',place:'Gebiet'})[k]||k;
-function fit(){let a=v.getBoundingClientRect();scale=Math.min(a.width,a.height)/SIZE;tx=(a.width-SIZE*scale)/2;ty=(a.height-SIZE*scale)/2;apply();}
-function apply(){w.style.transform='translate('+tx+'px,'+ty+'px) scale('+scale+')';}
-function zoom(f,cx=v.clientWidth/2,cy=v.clientHeight/2){let ns=Math.max(.22,Math.min(18,scale*f));tx=cx-(cx-tx)*ns/scale;ty=cy-(cy-ty)*ns/scale;scale=ns;apply();}
-function open(rec){results.style.display='none';let h='<button class="close" id="dclose">Schließen ✕</button><h2>'+esc(rec.name)+'</h2><b>'+esc(kind(rec.kind))+'</b><p><b>Gebiet / mögliche Standorte:</b> '+esc(rec.place)+'</p>';if(rec.goods.length)h+='<p><b>Waren / Tausch:</b> '+rec.goods.map(esc).join(' · ')+'</p>';h+='<p>'+esc(rec.details)+'</p><p style="font-size:12px">Quellen und Händlerangebot können sich ändern. Markierungen sind nur ungefähre Regionshinweise, soweit nicht anders angegeben.<br><a href="'+rec.source+'" target="_blank" rel="noopener">Quelle öffnen</a></p>';detail.innerHTML=h;detail.style.display='block';$('dclose').onclick=()=>detail.style.display='none';}
-function matches(rec){let s=norm([rec.name,rec.place,rec.details,...rec.goods].join(' ')),term=norm(q.value);if(rec.area!==r.value)return false;return term?s.includes(term):selected.has(rec.kind);}
-function render(){markers.replaceChildren();let items=data.filter(matches);for(let rec of items){let b=document.createElement('button');b.className='pin '+(rec.kind==='resource'?'resource':rec.kind==='place'?'place':rec.kind==='farm'?'farm':'');b.style.left=rec.x+'%';b.style.top=rec.y+'%';b.textContent=rec.kind==='resource'?'◆':rec.kind==='place'?'⌖':rec.kind==='farm'?'★':'◈';b.setAttribute('aria-label',rec.name);b.title=rec.name;b.onclick=e=>{e.stopPropagation();open(rec)};markers.appendChild(b);}
-results.replaceChildren();if(q.value.trim()){results.style.display='block';let close=document.createElement('button');close.className='close';close.textContent='Suche schließen ✕';close.onclick=()=>{q.value='';render()};results.appendChild(close);for(let rec of items){let b=document.createElement('button');b.innerHTML=esc(rec.name)+'<small>'+esc(kind(rec.kind))+' · '+esc(rec.place.slice(0,65))+'</small>';b.onclick=()=>{open(rec);};results.appendChild(b)}if(q.value.trim()){let term=norm(q.value);let translation=aliases[term]||term;let found=catalog.filter(item=>norm(item.name).includes(term)||norm(item.name).includes(translation)||norm(item.id).includes(term)).slice(0,60);if(found.length){let h=document.createElement('div');h.className='note';h.textContent='Gegenstandskatalog · '+found.length+(found.length===60?'+':'')+' Treffer · Diese Einträge sind nicht automatisch Fundorte';results.appendChild(h);for(const item of found){let b=document.createElement('button');b.className='catalog';let label=document.createElement('span');label.textContent=item.name;let small=document.createElement('small');small.textContent=(item.desc||'Item aus öffentlicher Spieldatenbank').slice(0,105);b.append(label,small);b.onclick=()=>{let link='https://awakening.wiki/Special:Search?search='+encodeURIComponent(item.name);open({name:item.name,kind:'catalog',place:'Für diesen Gegenstand ist im Atlas nicht automatisch ein geprüfter Fundort hinterlegt. Nutze die deutsche/englische Suche nach Farmspots und Händlern.',goods:[],details:(item.desc||'')+' · Seit Spielversion: '+(item.added||'unbekannt')+'. Der Item-Katalog enthält Gegenstände, nicht automatisch ihren Spawnort.',source:link});};results.appendChild(b)}}}else if(!catalog.length){let n=document.createElement('div');n.className='note';n.textContent='Gegenstandskatalog wurde nicht geladen. Die bekannten Fundorte bleiben nutzbar.';results.appendChild(n);}
-if(!items.length&&!results.querySelector('.catalog')){let d=document.createElement('div');d.textContent='Keine Einträge in dieser Beta. Die Datenbank wird weiter ausgebaut.';d.style.padding='14px';results.appendChild(d)}}else results.style.display='none';}
-function switchMap(){detail.style.display='none';img.onload=()=>{$('fallback').style.display='none'};img.onerror=()=>{$('fallback').style.display='block';$('tip').textContent='Kartenbild nicht erreichbar: Internet oder externe Quelle prüfen.'};$('fallback').style.display='none';img.src=maps[r.value];$('label').textContent=r.value==='hagga'?'HAGGA-BECKEN':'TIEFE WÜSTE – WEEKLY';fit();render();}
-document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{let k=b.dataset.filter;selected.has(k)?selected.delete(k):selected.add(k);b.classList.toggle('on',selected.has(k));render()});$('clear').onclick=()=>{selected.clear();q.value='';document.querySelectorAll('[data-filter]').forEach(b=>b.classList.remove('on'));detail.style.display='none';render()};q.oninput=render;r.onchange=switchMap;$('plus').onclick=()=>zoom(1.8);$('minus').onclick=()=>zoom(1/1.8);$('reset').onclick=fit;
-v.addEventListener('wheel',e=>{e.preventDefault();let box=v.getBoundingClientRect();zoom(e.deltaY<0?1.25:.8,e.clientX-box.left,e.clientY-box.top)},{passive:false});
-v.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;v.setPointerCapture(e.pointerId);pointers.set(e.pointerId,[e.clientX,e.clientY]);gesture=null;});
-v.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;let old=pointers.get(e.pointerId);pointers.set(e.pointerId,[e.clientX,e.clientY]);let list=[...pointers.values()];if(list.length===1){tx+=e.clientX-old[0];ty+=e.clientY-old[1];apply()}else if(list.length===2){let [a,b]=list;let mid=[(a[0]+b[0])/2,(a[1]+b[1])/2];let dist=Math.hypot(a[0]-b[0],a[1]-b[1]);let rect=v.getBoundingClientRect();if(!gesture){gesture={dist,scale,tx,ty,mid}}else{let ns=Math.max(.22,Math.min(18,gesture.scale*dist/Math.max(1,gesture.dist)));tx=mid[0]-rect.left-(gesture.mid[0]-rect.left-gesture.tx)*ns/gesture.scale;ty=mid[1]-rect.top-(gesture.mid[1]-rect.top-gesture.ty)*ns/gesture.scale;scale=ns;apply()}}});
-function release(e){pointers.delete(e.pointerId);gesture=null}v.addEventListener('pointerup',release);v.addEventListener('pointercancel',release);window.addEventListener('resize',fit);switchMap();
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+const catalog=Array.isArray(window.ARRAKIS_ITEMS)?window.ARRAKIS_ITEMS:[];
+const terms=[
+ {id:'industrial pump',name:'Industriepumpe',aka:['Industrial Pump','Industriepumpen'],type:'item'},
+ {id:'complex machinery',name:'Komplexe Maschinen',aka:['Complex Machinery','komplexe Maschine'],type:'item'},
+ {id:'iron ore',name:'Eisenerz',aka:['Iron Ore','Eisen'],type:'item'},
+ {id:'copper ore',name:'Kupfererz',aka:['Copper Ore'],type:'item'},
+ {id:'iodine pills',name:'Jodtabletten',aka:['Iodine Pills'],type:'item'},
+ {id:'jasmium crystal',name:'Jasmiumkristalle',aka:['Jasmium Crystal'],type:'item'},
+ {id:'agave seeds',name:'Agavensamen',aka:['Agave Seeds'],type:'item'},
+ {id:'carbide scraps',name:'Karbidreste',aka:['Carbide Scraps'],type:'item'},
+ {id:'diamondine dust',name:'Diamantstaub',aka:['Diamondine Dust'],type:'item'},
+ {id:'advanced servoks',name:'Fortschrittliche Servoks',aka:['Advanced Servoks'],type:'item'},
+ {id:'particle capacitors',name:'Partikelkondensatoren',aka:['Particle Capacitors'],type:'item'},
+ {id:'merchant arkady',name:'Arkady Demidenko',aka:['Wanderhändler'],type:'trader'},
+ {id:'merchant zoe',name:'Zoe',aka:['The Crossroads', 'Händlerin'],type:'trader'}
+];
+const spots=[
+ {id:'sentinel',name:'Sentinel City · Truhen',region:'hagga',x:78,y:37,level:'best',kind:'farm',precision:'region',items:['industrial pump'],notes:'Mehrere Kisten in der Stadt; Truhen auch tiefer im Gebiet. Gut bewährte Farmrunde, aber starke Gegner.',source:'https://awakening.wiki/Industrial_Pump'},
+ {id:'pump_fallen',name:'Abgestürzte Schiffe',region:'hagga',level:'alternative',kind:'farm',precision:'dynamic',items:['industrial pump'],notes:'Fallen Ships können Industriepumpen enthalten. Die konkreten Absturzstellen wechseln; daher bewusst kein erfundener Kartenpunkt.',source:'https://awakening.wiki/Industrial_Pump'},
+ {id:'pump_testing',name:'Tiefwüsten-Prüfstationen und Wracks',region:'deep',level:'possible',kind:'farm',precision:'dynamic',items:['industrial pump'],notes:'Manche seltene Kisten können Industriepumpen enthalten. Das Layout und die Positionen wechseln; keine dauerhaften Pins.',source:'https://awakening.wiki/Industrial_Pump'},
+ {id:'zoe',name:'Zoe · Crossroads-Handelsposten',region:'hagga',x:20,y:32,level:'alternative',kind:'trader',precision:'region',items:['industrial pump','carbide scraps','diamondine dust','merchant zoe'],goods:['Industriepumpe (je nach Bestand)','Karbidreste','Diamantstaub'],notes:'Feste Händlerin am Crossroads-Handelsposten in Mysa Tarill. Der Pin liegt nur ungefähr in der Region, nicht exakt auf dem Gebäude.',source:'https://awakening.wiki/The_Crossroads_Tradepost'},
+ {id:'iron_sw',name:'Southwest Ironworks',region:'hagga',x:38,y:68,level:'best',kind:'farm',precision:'region',items:['complex machinery','iron ore'],notes:'Western Vermillius Gap. In den Maschinen der Fabrik bzw. kleineren Gebäude suchen; für verschlossene Bereiche ID-Band erforderlich.',source:'https://awakening.wiki/Southwest_Ironworks'},
+ {id:'iron_nw',name:'Northwest Ironworks',region:'hagga',x:31,y:49,level:'best',kind:'farm',precision:'region',items:['complex machinery','iron ore'],notes:'Western Vermillius Gap, nordwestlich des Wracks Pallas. Maschinen und Fabrik durchsuchen, auf Kirab achten.',source:'https://awakening.wiki/Northwest_Ironworks'},
+ {id:'iron_se',name:'Southeast Ironworks',region:'hagga',x:61,y:67,level:'best',kind:'farm',precision:'region',items:['complex machinery','iron ore'],notes:'Eastern Vermillius Gap. Obere Gebäude und abgesenkte Fabrik nach Beute durchsuchen.',source:'https://awakening.wiki/Southeast_Ironworks'},
+ {id:'other_machinery',name:'Weitere Fabriken und Prüfstationen',region:'hagga',level:'alternative',kind:'farm',precision:'unknown',items:['complex machinery'],notes:'Komplexe Maschinen können auch aus technischen Anlagen und Fabrikmaschinen stammen. Ohne geprüfte Koordinaten kein Pin.',source:'https://www.method.gg/dune-awakening/where-to-find-farm-complex-machinery-in-dune-awakening'},
+ {id:'sheol_jasmium',name:'Sheol · Jasmium-Gebiet',region:'hagga',x:13,y:85,level:'best',kind:'resource',precision:'region',items:['jasmium crystal'],notes:'Großes verstrahltes Suchgebiet, keine garantiert vorhandene Einzelader. Strahlungsschutz mitnehmen.',source:'https://dune.gaming.tools/hagga-basin'},
+ {id:'copper_south',name:'Südliches Hagga · Kupfergebiet',region:'hagga',x:53,y:78,level:'alternative',kind:'resource',precision:'region',items:['copper ore'],notes:'Nur allgemeine Orientierung zum Kupferabbau. Fundstellen und Ressourcendichte im Spiel mit Survey-Probe prüfen.',source:'https://duneawakening.th.gl/guides/Copper%20Ore'},
+ {id:'arkady',name:'Arkady Demidenko · dynamischer Händler',region:'hagga',x:13,y:75,level:'possible',kind:'trader',precision:'dynamic',items:['iodine pills','jasmium crystal','merchant arkady'],goods:['Jodtabletten','Jasmiumkristalle','Verstrahlte Schlacke'],notes:'Mögliche Begegnungen in der Sheol-Region; rotes Leuchtsignal beachten. Der Händler steht nicht immer an derselben Stelle.',source:'https://dune.gaming.tools/hagga-basin'},
+ {id:'agave',name:'O’odham · Agaven-Region',region:'hagga',x:30,y:67,level:'possible',kind:'resource',precision:'region',items:['agave seeds'],notes:'Grobe Orientierung, kein genauer Pflanzenspawn.',source:'https://dune.gaming.tools/hagga-basin'},
+ {id:'mysa_loot',name:'Mysa Tarill · Außenposten',region:'hagga',x:20,y:29,level:'alternative',kind:'farm',precision:'region',items:['carbide scraps','diamondine dust'],notes:'Gegner und Kisten im Gebiet; guter Vergleichsort, aber kein garantierter Drop. Die Pins sind nur ungefähre Regionshinweise.',source:'https://www.pcgamer.com/games/mmo/dune-awakening-diamondine-dust-locations/'},
+ {id:'khidir_loot',name:'Hand of Khidir · Außenposten',region:'hagga',x:49,y:44,level:'alternative',kind:'farm',precision:'region',items:['carbide scraps','diamondine dust'],notes:'Außenposten mit Kisten und Gegnern in Jabal Eifrit Al-janub. Region statt exakter Kistenposition.',source:'https://www.pcgamer.com/games/mmo/dune-awakening-carbide-scraps-locations/'},
+ {id:'deep_labs',name:'Imperiale Prüfstationen',region:'deep',level:'alternative',kind:'farm',precision:'dynamic',items:['advanced servoks','particle capacitors'],notes:'Prüfstationen (Ecology Labs) sind eine wichtige Quelle alter imperialer Komponenten. Einzelne Stationen wechseln je nach Kartenlayout.',source:'https://awakening.wiki/Testing_Stations'}
+];
+const order={best:0,alternative:1,possible:2};
+const status={best:'Guter Farmspot',alternative:'Weitere Quelle',possible:'Möglicher Fundort'};
+const icon={best:'★',alternative:'●',possible:'?'};
+let selected=null,mode=null,scale=1,tx=0,ty=0,pointer=new Map(),gesture=null,visible=[],tileImages=new Map(),raf=0;
+const appRegions={hagga:'Hagga-Becken',deep:'Tiefe Wüste'};
+function fit(){const rect=frame.getBoundingClientRect();scale=Math.min(rect.width,rect.height)/WORLD;tx=(rect.width-WORLD*scale)/2;ty=(rect.height-WORLD*scale)/2;updateView();}
+function zoom(f,cx=frame.clientWidth/2,cy=frame.clientHeight/2){let next=Math.max(Math.min(frame.clientWidth,frame.clientHeight)/WORLD*.8,Math.min(12,scale*f));tx=cx-(cx-tx)*next/scale;ty=cy-(cy-ty)*next/scale;scale=next;updateView();}
+function centerAt(s){if(typeof s.x!=='number')return;scale=Math.max(scale,1.5);tx=frame.clientWidth/2-s.x/100*WORLD*scale;ty=frame.clientHeight/2-s.y/100*WORLD*scale;updateView();}
+function updateView(){world.style.transform='translate('+tx+'px,'+ty+'px) scale('+scale+')';schedulePaint();}
+function schedulePaint(){if(raf)return;raf=requestAnimationFrame(()=>{raf=0;drawTiles();drawPins();});}
+function drawTiles(){
+ const z=Math.max(0,Math.min(MAX_TILE_Z,Math.ceil(Math.log2(WORLD*scale/TILE))));const n=2**z;
+ const minX=Math.max(0,Math.floor(((-tx)/(WORLD*scale))*n)-1);
+ const minY=Math.max(0,Math.floor(((-ty)/(WORLD*scale))*n)-1);
+ const maxX=Math.min(n-1,Math.ceil(((frame.clientWidth-tx)/(WORLD*scale))*n));
+ const maxY=Math.min(n-1,Math.ceil(((frame.clientHeight-ty)/(WORLD*scale))*n));
+ const keep=new Set();
+ for(let y=minY;y<=maxY;y++)for(let x=minX;x<=maxX;x++){
+  const key=region.value+'/'+z+'/'+x+'_'+y;
+  keep.add(key);
+  if(tileImages.has(key))continue;
+  let img=document.createElement('img');img.className='tile';img.alt='';img.decoding='async';img.draggable=false;
+  img.style.left=(x/n*100)+'%';img.style.top=(y/n*100)+'%';
+  img.style.width=(100/n+0.01)+'%';img.style.height=(100/n+0.01)+'%';
+  img.src='file:///android_asset/tiles/'+region.value+'/'+z+'/'+x+'_'+y+'.jpg';
+  img.onerror=()=>{img.style.display='none'};
+  tileImages.set(key,img);tilelayer.appendChild(img);
+ }
+ for(const [key,img] of tileImages){if(!keep.has(key)){img.remove();tileImages.delete(key);}}
+ tilelayer.style.backgroundImage="url('file:///android_asset/tiles/"+region.value+"/0/0_0.jpg')";
+ tilelayer.style.backgroundSize='100% 100%';
+}
+function drawPins(){
+ pins.replaceChildren();
+ for(const s of visible){
+  if(typeof s.x!=='number'||typeof s.y!=='number')continue;
+  const px=tx+(s.x/100)*WORLD*scale,py=ty+(s.y/100)*WORLD*scale;
+  if(px< -80||px>frame.clientWidth+80||py< -70||py>frame.clientHeight+70)continue;
+  let b=document.createElement('button');b.type='button';b.className='pin '+(s.kind==='trader'?'trader':s.level);
+  b.style.left=px+'px';b.style.top=py+'px';
+  const showText=scale>2.2||visible.length===1;
+  b.innerHTML='<span class="pinicon">'+icon[s.level]+'</span>'+(showText?'<span class="pinlabel"> '+esc(s.name)+'</span>':'');
+  b.setAttribute('aria-label',s.name+', '+status[s.level]);
+  b.onclick=(e)=>{e.stopPropagation();openSpot(s)};
+  pins.appendChild(b);
+ }
+}
+function hideSuggestions(){suggestions.hidden=true;suggestions.replaceChildren();}
+function hideDetails(){details.hidden=true;details.replaceChildren();}
+function itemByText(s){let n=norm(s);return terms.find(t=>t.id===n||norm(t.name)===n||t.aka.some(a=>norm(a)===n));}
+function matchesTerm(t,q){let n=norm(q);return norm(t.name).includes(n)||norm(t.id).includes(n)||t.aka.some(a=>norm(a).includes(n));}
+function getSuggestions(q){
+ let n=norm(q);if(!n)return[];
+ const known=terms.filter(t=>matchesTerm(t,n)).slice(0,15);
+ const used=new Set(known.map(t=>t.id));
+ for(const rec of catalog){
+  if(known.length>=13)break;
+  let id=norm(rec.name);
+  if(!used.has(id)&&(id.includes(n)||norm(rec.id).includes(n))){
+   used.add(id);known.push({id,name:rec.name,aka:[],type:'item',desc:rec.desc||''});
+  }
+ }
+ return known;
+}
+function showSuggestions(){
+ const q=search.value.trim();hideDetails();
+ if(!q){hideSuggestions();selected=null;mode=null;setModeButtons();render();return;}
+ selected=null;mode=null;setModeButtons();render();
+ const opts=getSuggestions(q);
+ suggestions.replaceChildren();
+ if(!opts.length){let div=document.createElement('div');div.style.padding='13px';div.textContent='Keine Vorschläge für diesen Begriff.';suggestions.appendChild(div);}
+ else for(const t of opts){
+  let b=document.createElement('button');b.type='button';b.className='suggest';b.setAttribute('role','option');
+  let a=document.createElement('b');a.textContent=t.name;
+  let sm=document.createElement('small');sm.textContent=t.type==='trader'?'Händler anzeigen':'Gegenstand auswählen und nur seine Fundorte anzeigen';
+  b.append(a,sm);b.onclick=()=>selectTerm(t);
+  suggestions.appendChild(b);
+ }
+ suggestions.hidden=false;
+}
+function selectTerm(t){
+ selected=t;mode=null;setModeButtons();search.value=t.name;hideSuggestions();hideDetails();search.blur();render();
+}
+function setModeButtons(){document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));}
+function selectMode(next){if(mode===next){mode=null;}else mode=next;selected=null;search.value='';hideSuggestions();hideDetails();setModeButtons();render();}
+function resolve(){
+ if(selected){
+  return spots.filter(s=>s.items.includes(selected.id)).sort((a,b)=>order[a.level]-order[b.level]);
+ }
+ if(!mode)return[];
+ if(mode==='farms')return spots.filter(s=>s.kind==='farm' && s.region===region.value);
+ if(mode==='resources')return spots.filter(s=>s.kind==='resource' && s.region===region.value);
+ if(mode==='traders')return spots.filter(s=>s.kind==='trader' && s.region===region.value);
+ if(mode==='places')return spots.filter(s=>['farm','resource','trader'].includes(s.kind)&&s.region===region.value);
+ return [];
+}
+function render(){
+ const matches=resolve();
+ visible=matches.filter(s=>s.region===region.value);
+ const withPin=visible.filter(s=>typeof s.x==='number').length;
+ const elsewhere=matches.length-visible.length;
+ if(selected||mode){
+  selectionBar.hidden=false;spotList.hidden=false;
+  const title=selected?selected.name:({'farms':'Farmspots','resources':'Erzgebiete','traders':'Händler','places':'Orte'})[mode];
+  selectionBar.innerHTML='<b>'+esc(title)+'</b><small>'+withPin+' ungefähr markierte Orte · '+Math.max(0,matches.length-withPin)+' weitere Quellen ohne festen Pin'+(elsewhere?' · '+elsewhere+' in anderer Karte':'')+'</small><div class="legend"><span class="dot gold"></span>Gute Farmrunde<span class="dot blue"></span>Weitere Quelle<span class="dot gray"></span>Dynamisch / unsicher</div>';
+  spotList.replaceChildren();
+  if(!matches.length){
+   let p=document.createElement('div');p.style.padding='11px';p.textContent='Dieser Gegenstand ist im Katalog bekannt, aber konkrete Fundorte sind noch nicht überprüft.';spotList.appendChild(p);
+  }
+  for(const s of matches){
+   let b=document.createElement('button');b.className='spot';b.type='button';
+   let left=document.createElement('span'),strong=document.createElement('strong'),sm=document.createElement('small'),right=document.createElement('span');
+   strong.textContent=s.name;sm.textContent=appRegions[s.region]+' · '+(typeof s.x==='number'?'ungefähre Kartenregion':'kein fester Punkt');
+   right.className='status '+s.level;right.textContent=status[s.level];
+   left.append(strong,sm);b.append(left,right);
+   b.onclick=()=>{
+    if(region.value!==s.region){region.value=s.region;switchRegion(false);}
+    if(typeof s.x==='number')centerAt(s);
+    openSpot(s);
+   };
+   spotList.appendChild(b);
+  }
+  hint.textContent=selected?'Fundorte ausschließlich für: '+selected.name:'Nur ausgewählte Kategorie sichtbar';
+ }else{
+  selectionBar.hidden=true;spotList.hidden=true;
+  hint.textContent='Karte zunächst leer · Suchvorschlag antippen';
+ }
+ drawPins();
+}
+function openSpot(s){
+ hideSuggestions();
+ details.hidden=false;
+ let h='<button class="close" id="detailClose">Schließen ×</button><h2>'+esc(s.name)+'</h2>';
+ h+='<p><b>'+esc(status[s.level])+'</b> · '+esc(appRegions[s.region])+'</p>';
+ h+='<p>'+esc(s.notes)+'</p>';
+ if(s.goods)h+='<p><b>Angebot:</b> '+s.goods.map(esc).join(' · ')+'</p>';
+ h+='<p><b>Kartengenauigkeit:</b> '+(s.precision==='region'?'Ungefähres Gebiet, kein garantierter Punkt':s.precision==='dynamic'?'Wechselnder Spawn oder Gegenstandsort':'Noch keine überprüfte Kartenposition')+'</p>';
+ h+='<p class="mini">Quellen können sich mit Updates ändern. <a href="'+esc(s.source)+'" target="_blank" rel="noopener">Quelle ansehen</a></p>';
+ details.innerHTML=h;$('detailClose').onclick=hideDetails;
+}
+function switchRegion(reset=true){
+ tileImages.forEach(img=>img.remove());tileImages.clear();
+ if(reset)fit();else updateView();
+ render();
+}
+function allClear(){selected=null;mode=null;search.value='';hideSuggestions();hideDetails();setModeButtons();render();}
+search.addEventListener('input',showSuggestions);
+search.addEventListener('keydown',e=>{if(e.key==='Enter'){const all=getSuggestions(search.value.trim());if(all.length)selectTerm(all[0]);e.preventDefault();}else if(e.key==='Escape')hideSuggestions()});
+$('clearSearch').onclick=allClear;$('clearAll').onclick=allClear;
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>selectMode(b.dataset.mode));
+region.onchange=()=>switchRegion(true);
+$('plus').onclick=()=>zoom(1.65);$('minus').onclick=()=>zoom(1/1.65);$('reset').onclick=fit;
+frame.addEventListener('wheel',e=>{e.preventDefault();const rect=frame.getBoundingClientRect();zoom(e.deltaY<0?1.25:.8,e.clientX-rect.left,e.clientY-rect.top);},{passive:false});
+frame.addEventListener('pointerdown',e=>{if(e.target.closest('button')||!details.hidden)return;pointer.set(e.pointerId,{x:e.clientX,y:e.clientY});frame.setPointerCapture(e.pointerId);gesture=null;});
+frame.addEventListener('pointermove',e=>{
+ if(!pointer.has(e.pointerId))return;
+ const old=pointer.get(e.pointerId);pointer.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(pointer.size===1){tx+=e.clientX-old.x;ty+=e.clientY-old.y;updateView();}
+ else if(pointer.size>=2){
+  let p=[...pointer.values()],a=p[0],b=p[1],mx=(a.x+b.x)/2,my=(a.y+b.y)/2,dist=Math.hypot(a.x-b.x,a.y-b.y);
+  const rect=frame.getBoundingClientRect(),cx=mx-rect.left,cy=my-rect.top;
+  if(gesture){
+   const next=Math.max(Math.min(frame.clientWidth,frame.clientHeight)/WORLD*.8,Math.min(12,gesture.scale*dist/Math.max(1,gesture.dist)));
+   tx=cx-(gesture.cx-gesture.tx)*next/gesture.scale;
+   ty=cy-(gesture.cy-gesture.ty)*next/gesture.scale;
+   scale=next;updateView();
+  }else gesture={dist,scale,tx,ty,cx,cy};
+ }
+});
+const finish=e=>{pointer.delete(e.pointerId);gesture=null};
+frame.addEventListener('pointerup',finish);frame.addEventListener('pointercancel',finish);
+frame.addEventListener('dblclick',e=>{const rect=frame.getBoundingClientRect();zoom(1.65,e.clientX-rect.left,e.clientY-rect.top);});
+window.addEventListener('resize',()=>fit());
+if(window.visualViewport)window.visualViewport.addEventListener('resize',()=>fit());
+fit();render();
 })();
 </script></body></html>
