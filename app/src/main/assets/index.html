@@ -53,6 +53,17 @@ input::placeholder{color:#b6c5c9;opacity:1}
 #details h2{margin:3px 0 9px;font-size:20px;line-height:1.3;color:#ffddaa}#details p{line-height:1.55;margin:10px 0}
 #details a{color:#f9cc91}#details .close{float:right;background:#2e424c;color:white;border:1px solid #778890;padding:8px 11px;border-radius:9px;min-height:42px}
 #details .mini{font-size:12px;color:#c4d0d6}
+#categoryPanel{padding:9px 10px;background:#192a33;border-bottom:1px solid #63717a;max-height:235px;overflow-y:auto}
+#categoryPanel[hidden]{display:none}
+#categoryPanel h2{font-size:14px;color:#f4d199;margin:0 0 7px}
+#categoryPanel .choice{background:#253945;border:1px solid #54717c;border-radius:9px;width:100%;padding:8px 12px;margin:3px 0;text-align:left;color:#faf6ed;min-height:48px;display:block}
+#categoryPanel .choice b{display:block;font-size:14px}
+#categoryPanel .choice small{display:block;color:#bfcdd4;font-size:12px}
+#categoryPanel .hintText{font-size:12px;color:#d9c5a7;line-height:1.4}
+#details .offerList{max-height:220px;overflow:auto;margin:7px 0;border:1px solid #526975;border-radius:9px}
+#details .offer{width:100%;text-align:left;display:flex;gap:8px;justify-content:space-between;padding:8px 10px;min-height:39px;color:#eaf3ed;background:#20323d;border:0;border-bottom:1px solid #435967}
+#details .offer:nth-child(even){background:#263c45}
+#details .offer strong{color:#f5d59e;white-space:nowrap}
 footer{background:#172630;color:#b3c7ce;padding:6px 11px;font-size:11px;line-height:1.3}
 @media (max-width:375px){.brand{font-size:16px!important}#region{min-width:99px!important}.filters button{padding:7px 9px}.spot small{font-size:11px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
@@ -60,13 +71,15 @@ footer{background:#172630;color:#b3c7ce;padding:6px 11px;font-size:11px;line-hei
 <div id="app">
 <header><div class="brand">◇ ARRAKIS ATLAS<small>Interaktive Dune-Karte · Oktober 2026</small></div><div class="privacy">Ruhige Ansicht<br><small>Offline · ohne Konto</small></div></header>
 <div class="tools"><div class="searchbox"><input id="search" type="search" enterkeyhint="search" autocomplete="off" spellcheck="false" aria-label="Gegenstand oder Händler suchen" placeholder="Item, Händler, Ort ..."><button id="clearSearch" aria-label="Suche leeren">×</button></div><select id="region" aria-label="Karte wählen"><option value="hagga">Hagga</option><option value="deep">Tiefe Wüste</option></select></div>
-<div class="filters"><button data-mode="farms">Farmspots</button><button data-mode="resources">Erzgebiete</button><button data-mode="traders">Händler</button><button data-mode="places">Orte</button><button id="clearAll">Alles aus</button></div>
+<div class="filters"><button data-mode="farms">Farmspots</button><button data-mode="resources">Erzgebiete</button><button data-mode="traders">Händler</button><button data-mode="taxis">Taxis</button><button data-mode="quests">Quests</button><button data-mode="places">Orte</button><button id="clearAll">Alles aus</button></div>
+<div id="categoryPanel" aria-live="polite" hidden></div>
 <div id="suggestions" role="listbox" aria-label="Suchvorschläge" hidden></div>
 <div id="mapframe"><div id="world"><div id="tilelayer"></div></div><div id="pins"></div><div id="mapHint">2 Finger = Zoom · 1 Finger = Verschieben</div><div class="zoom"><button id="plus" aria-label="Vergrößern">+</button><button id="minus" aria-label="Verkleinern">−</button><button id="reset" aria-label="Ganze Karte anzeigen">⌂</button></div><div id="details" hidden></div></div>
 <div id="selectionBar" hidden></div><div id="spotList" hidden></div>
 <footer>Gold = guter Farmspot · Blau = weitere Quelle · Gestrichelt = unsicher / dynamisch · Positionen teils nur ungefähre Gebiete.</footer>
 </div>
 <script src="items.js"></script>
+<script src="extra.js"></script>
 <script>
 (function(){
 'use strict';
@@ -76,6 +89,8 @@ const frame=$('mapframe'),world=$('world'),tilelayer=$('tilelayer'),pins=$('pins
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 const catalog=Array.isArray(window.ARRAKIS_ITEMS)?window.ARRAKIS_ITEMS:[];
+const extra=window.ATLAS_EXTRA||{terms:[],locations:[],vendors:{}};
+const categoryPanel=$('categoryPanel');
 const terms=[
  {id:'industrial pump',name:'Industriepumpe',aka:['Industrial Pump','Industriepumpen'],type:'item'},
  {id:'complex machinery',name:'Komplexe Maschinen',aka:['Complex Machinery','komplexe Maschine'],type:'item'},
@@ -108,10 +123,24 @@ const spots=[
  {id:'khidir_loot',name:'Hand of Khidir · Außenposten',region:'hagga',x:49,y:44,level:'alternative',kind:'farm',precision:'region',items:['carbide scraps','diamondine dust'],notes:'Außenposten mit Kisten und Gegnern in Jabal Eifrit Al-janub. Region statt exakter Kistenposition.',source:'https://www.pcgamer.com/games/mmo/dune-awakening-carbide-scraps-locations/'},
  {id:'deep_labs',name:'Imperiale Prüfstationen',region:'deep',level:'alternative',kind:'farm',precision:'dynamic',items:['advanced servoks','particle capacitors'],notes:'Prüfstationen (Ecology Labs) sind eine wichtige Quelle alter imperialer Komponenten. Einzelne Stationen wechseln je nach Kartenlayout.',source:'https://awakening.wiki/Testing_Stations'}
 ];
+for(const term of (extra.terms||[])){if(!terms.some(t=>t.id===term.id))terms.push(term);}
+for(const loc of (extra.locations||[])){
+ if(loc.merge){const found=spots.find(s=>s.id===loc.merge);if(found)Object.assign(found,{vendor:loc.vendor});}
+ else spots.push(loc);
+}
+for(const spot of spots){
+ if(!spot.vendor)continue;
+ const vendor=extra.vendors&&extra.vendors[spot.vendor];
+ if(!vendor)continue;
+ spot.vendorGoods=vendor.goods;
+ spot.vendorChecked=vendor.checked;
+ spot.source=vendor.source;
+ spot.items=Array.from(new Set([...(spot.items||[]),...vendor.goods.map(g=>g[1])]));
+}
 const order={best:0,alternative:1,possible:2};
 const status={best:'Guter Farmspot',alternative:'Weitere Quelle',possible:'Möglicher Fundort'};
 const icon={best:'★',alternative:'●',possible:'?'};
-let selected=null,mode=null,scale=1,tx=0,ty=0,pointer=new Map(),gesture=null,visible=[],tileImages=new Map(),raf=0;
+let selected=null,selectedLocation=null,mode=null,scale=1,tx=0,ty=0,pointer=new Map(),gesture=null,visible=[],tileImages=new Map(),raf=0;
 const appRegions={hagga:'Hagga-Becken',deep:'Tiefe Wüste'};
 function fit(){const rect=frame.getBoundingClientRect();scale=Math.min(rect.width,rect.height)/WORLD;tx=(rect.width-WORLD*scale)/2;ty=(rect.height-WORLD*scale)/2;updateView();}
 function zoom(f,cx=frame.clientWidth/2,cy=frame.clientHeight/2){let next=Math.max(Math.min(frame.clientWidth,frame.clientHeight)/WORLD*.8,Math.min(12,scale*f));tx=cx-(cx-tx)*next/scale;ty=cy-(cy-ty)*next/scale;scale=next;updateView();}
@@ -156,6 +185,45 @@ function drawPins(){
  }
 }
 function hideSuggestions(){suggestions.hidden=true;suggestions.replaceChildren();}
+function renderCategory(){
+ categoryPanel.replaceChildren();
+ if(!mode){categoryPanel.hidden=true;return;}
+ let title={traders:'Händler auswählen',resources:'Erz oder Rohstoff auswählen',farms:'Farmgegenstand auswählen',taxis:'Taxi / Schnellreise auswählen',quests:'Auftragstafel oder Questgeber auswählen',places:'Interessanten Ort auswählen'}[mode]||'Auswählen';
+ let heading=document.createElement('h2');heading.textContent=title;categoryPanel.appendChild(heading);
+ const text=document.createElement('div');text.className='hintText';text.textContent='Erst auswählen, dann werden nur die dazugehörigen Orte auf der Karte hervorgehoben.';categoryPanel.appendChild(text);
+ let chosen=[];
+ if(mode==='traders')chosen=spots.filter(s=>s.kind==='trader');
+ else if(mode==='taxis')chosen=spots.filter(s=>s.kind==='taxi');
+ else if(mode==='quests')chosen=spots.filter(s=>s.kind==='quest');
+ else if(mode==='places')chosen=spots.filter(s=>s.kind==='farm'||s.kind==='resource');
+ else {
+  const allowed=spots.filter(s=>mode==='farms'?s.kind==='farm':s.kind==='resource');
+  const ids=new Set(allowed.flatMap(s=>s.items));
+  const list=terms.filter(t=>ids.has(t.id)&&t.type!=='trader');
+  const seen=new Set(list.map(t=>t.id));
+  for(const id of ids){if(!seen.has(id)){let found=catalog.find(x=>norm(x.name)===norm(id));list.push({id,name:found?found.name:id,aka:[],type:'item'});}}
+  for(const t of list.sort((a,b)=>a.name.localeCompare(b.name,'de'))){
+   let b=document.createElement('button');b.type='button';b.className='choice';
+   const cnt=allowed.filter(s=>s.items.includes(t.id)).length;
+   b.innerHTML='<b>'+esc(t.name)+'</b><small>'+cnt+' bekannte Bezugsquelle(n)</small>';
+   b.onclick=()=>selectTerm(t);categoryPanel.appendChild(b);
+  }
+  categoryPanel.hidden=false;return;
+ }
+ for(const spot of chosen.sort((a,b)=>a.name.localeCompare(b.name,'de'))){
+  let b=document.createElement('button');b.type='button';b.className='choice';
+  const source=spot.vendorGoods?spot.vendorGoods.length+' Angebote · Preise ansehen':spot.costInfo||spot.notes.slice(0,90);
+  b.innerHTML='<b>'+esc(spot.name)+'</b><small>'+esc(source)+'</small>';
+  b.onclick=()=>selectLocation(spot);
+  categoryPanel.appendChild(b);
+ }
+ categoryPanel.hidden=false;
+}
+function selectLocation(spot){
+ selectedLocation=spot;selected=null;mode=null;search.value=spot.name;
+ categoryPanel.hidden=true;hideSuggestions();setModeButtons();
+ render();fit();if(typeof spot.x==='number')centerAt(spot);openSpot(spot);
+}
 function hideDetails(){details.hidden=true;details.replaceChildren();}
 function itemByText(s){let n=norm(s);return terms.find(t=>t.id===n||norm(t.name)===n||t.aka.some(a=>norm(a)===n));}
 function matchesTerm(t,q){let n=norm(q);return norm(t.name).includes(n)||norm(t.id).includes(n)||t.aka.some(a=>norm(a).includes(n));}
@@ -174,8 +242,8 @@ function getSuggestions(q){
 }
 function showSuggestions(){
  const q=search.value.trim();hideDetails();
- if(!q){hideSuggestions();selected=null;mode=null;setModeButtons();render();return;}
- selected=null;mode=null;setModeButtons();render();
+ if(!q){hideSuggestions();selected=null;selectedLocation=null;mode=null;renderCategory();setModeButtons();render();return;}
+ selected=null;selectedLocation=null;mode=null;renderCategory();setModeButtons();render();
  const opts=getSuggestions(q);
  suggestions.replaceChildren();
  if(!opts.length){let div=document.createElement('div');div.style.padding='13px';div.textContent='Keine Vorschläge für diesen Begriff.';suggestions.appendChild(div);}
@@ -189,15 +257,17 @@ function showSuggestions(){
  suggestions.hidden=false;
 }
 function selectTerm(t){
- selected=t;mode=null;setModeButtons();search.value=t.name;hideSuggestions();hideDetails();search.blur();render();fit();
+ selected=t;selectedLocation=null;mode=null;setModeButtons();search.value=t.name;hideSuggestions();hideDetails();categoryPanel.hidden=true;search.blur();render();fit();
 }
 function setModeButtons(){document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));}
-function selectMode(next){if(mode===next){mode=null;}else mode=next;selected=null;search.value='';hideSuggestions();hideDetails();setModeButtons();render();fit();}
+function selectMode(next){mode=mode===next?null:next;selected=null;selectedLocation=null;search.value='';hideSuggestions();hideDetails();setModeButtons();renderCategory();render();fit();}
 function resolve(){
+ if(selectedLocation)return[selectedLocation];
  if(selected){
   return spots.filter(s=>s.items.includes(selected.id)).sort((a,b)=>order[a.level]-order[b.level]);
  }
  if(!mode)return[];
+ if(mode)return[];
  if(mode==='farms')return spots.filter(s=>s.kind==='farm' && s.region===region.value);
  if(mode==='resources')return spots.filter(s=>s.kind==='resource' && s.region===region.value);
  if(mode==='traders')return spots.filter(s=>s.kind==='trader' && s.region===region.value);
@@ -209,14 +279,15 @@ function render(){
  visible=matches.filter(s=>s.region===region.value);
  const withPin=visible.filter(s=>typeof s.x==='number').length;
  const elsewhere=matches.length-visible.length;
- if(selected||mode){
+ if(selected||selectedLocation||mode){
   selectionBar.hidden=false;spotList.hidden=false;
-  const title=selected?selected.name:({'farms':'Farmspots','resources':'Erzgebiete','traders':'Händler','places':'Orte'})[mode];
+  const title=selectedLocation?selectedLocation.name:selected?selected.name:({'farms':'Farmspots','resources':'Erzgebiete','traders':'Händler','taxis':'Taxis','quests':'Quests','places':'Orte'})[mode];
   selectionBar.innerHTML='<b>'+esc(title)+'</b><small>'+withPin+' ungefähr markierte Orte · '+Math.max(0,matches.length-withPin)+' weitere Quellen ohne festen Pin'+(elsewhere?' · '+elsewhere+' in anderer Karte':'')+'</small><div class="legend"><span class="dot gold"></span>Gute Farmrunde<span class="dot blue"></span>Weitere Quelle<span class="dot gray"></span>Dynamisch / unsicher</div>';
   spotList.replaceChildren();
-  if(!matches.length){
+  if(!matches.length && !mode){
    let p=document.createElement('div');p.style.padding='11px';p.textContent='Dieser Gegenstand ist im Katalog bekannt, aber konkrete Fundorte sind noch nicht überprüft.';spotList.appendChild(p);
   }
+  if(mode && !selectedLocation){spotList.hidden=true;selectionBar.innerHTML='<b>'+esc(title)+'</b><small>Wähle oben einen Eintrag im Untermenü.</small>';}
   for(const s of matches){
    let b=document.createElement('button');b.className='spot';b.type='button';
    let left=document.createElement('span'),strong=document.createElement('strong'),sm=document.createElement('small'),right=document.createElement('span');
@@ -230,7 +301,7 @@ function render(){
    };
    spotList.appendChild(b);
   }
-  hint.textContent=selected?'Fundorte ausschließlich für: '+selected.name:'Nur ausgewählte Kategorie sichtbar';
+  hint.textContent=selectedLocation?'Markiert: '+selectedLocation.name:selected?'Fundorte ausschließlich für: '+selected.name:'Erst Untermenü auswählen';
  }else{
   selectionBar.hidden=true;spotList.hidden=true;
   hint.textContent='Karte zunächst leer · Suchvorschlag antippen';
@@ -243,17 +314,27 @@ function openSpot(s){
  let h='<button class="close" id="detailClose">Schließen ×</button><h2>'+esc(s.name)+'</h2>';
  h+='<p><b>'+esc(status[s.level])+'</b> · '+esc(appRegions[s.region])+'</p>';
  h+='<p>'+esc(s.notes)+'</p>';
- if(s.goods)h+='<p><b>Angebot:</b> '+s.goods.map(esc).join(' · ')+'</p>';
+ if(s.vendorGoods){
+  h+='<p><b>Händlerangebot und Preise:</b></p><div class="mini">'+esc(s.vendorChecked||'Quellenstand unbekannt')+' · Preis in Solari, Änderungen möglich</div><div class="offerList">';
+  for(const g of s.vendorGoods)h+='<button class="offer" data-good="'+esc(g[1])+'"><span>'+esc(g[0])+'</span><strong>'+Number(g[2]).toLocaleString('de-DE')+' Solari</strong></button>';
+  h+='</div><p class="mini">Tippe einen angebotenen Gegenstand an, um alle erfassten Bezugsquellen dafür zu vergleichen. Die Bestandszahlen sind nicht live.</p>';
+ }else if(s.goods){h+='<p><b>Angebot:</b> '+s.goods.map(esc).join(' · ')+'</p>';}
+ if(s.costInfo)h+='<p><b>Taxipreise:</b> '+esc(s.costInfo)+'</p>';
  h+='<p><b>Kartengenauigkeit:</b> '+(s.precision==='region'?'Ungefähres Gebiet, kein garantierter Punkt':s.precision==='dynamic'?'Wechselnder Spawn oder Gegenstandsort':'Noch keine überprüfte Kartenposition')+'</p>';
  h+='<p class="mini">Quellen können sich mit Updates ändern. <a href="'+esc(s.source)+'" target="_blank" rel="noopener">Quelle ansehen</a></p>';
  details.innerHTML=h;$('detailClose').onclick=hideDetails;
+ details.querySelectorAll('.offer[data-good]').forEach(el=>el.onclick=()=>{
+   const id=el.getAttribute('data-good');const g=s.vendorGoods.find(a=>a[1]===id);
+   const term=terms.find(t=>t.id===id)||{id,name:g?g[0]:id,aka:[],type:'item'};
+   selectTerm(term);
+ });
 }
 function switchRegion(reset=true){
  tileImages.forEach(img=>img.remove());tileImages.clear();
  render();
  if(reset)fit();else updateView();
 }
-function allClear(){selected=null;mode=null;search.value='';hideSuggestions();hideDetails();setModeButtons();render();fit();}
+function allClear(){selected=null;selectedLocation=null;mode=null;search.value='';hideSuggestions();hideDetails();setModeButtons();renderCategory();render();fit();}
 search.addEventListener('input',showSuggestions);
 search.addEventListener('keydown',e=>{if(e.key==='Enter'){const all=getSuggestions(search.value.trim());if(all.length)selectTerm(all[0]);e.preventDefault();}else if(e.key==='Escape')hideSuggestions()});
 $('clearSearch').onclick=allClear;$('clearAll').onclick=allClear;
@@ -282,6 +363,6 @@ frame.addEventListener('pointerup',finish);frame.addEventListener('pointercancel
 frame.addEventListener('dblclick',e=>{const rect=frame.getBoundingClientRect();zoom(1.65,e.clientX-rect.left,e.clientY-rect.top);});
 window.addEventListener('resize',()=>fit());
 if(window.visualViewport)window.visualViewport.addEventListener('resize',()=>fit());
-fit();render();
+fit();render();renderCategory();
 })();
 </script></body></html>
