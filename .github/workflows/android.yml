@@ -53,6 +53,17 @@ jobs:
           test $(stat -c%s app/src/main/assets/map.jpg) -gt 1000000
           test $(stat -c%s app/src/main/assets/deep_desert.jpg) -gt 1000000
           file app/src/main/assets/map.jpg app/src/main/assets/deep_desert.jpg
+      - name: Create zoomable map tile pyramids
+        run: |
+          python3 -m pip install --user Pillow
+          python3 tools/build_tiles.py
+          test -s app/src/main/assets/tiles/hagga/4/0_0.jpg
+          test -s app/src/main/assets/tiles/deep/4/15_15.jpg
+          echo "Offline tile pyramid generated"
+      - name: Test map search and markers in desktop browser
+        run: |
+          npm install --no-save playwright-core
+          node tools/test_ui.mjs
       - name: Build debug APK
         run: gradle :app:assembleDebug --stacktrace
       - name: Enable Android emulator acceleration
@@ -75,6 +86,11 @@ jobs:
             ! adb logcat -d -s AndroidRuntime:E | grep -E 'FATAL EXCEPTION|com.arrakis.atlas'
             adb shell screencap -p /sdcard/atlas-smoke.png
             adb pull /sdcard/atlas-smoke.png atlas-smoke.png
+            adb shell input tap 105 112 || true
+            adb shell input text Industrie || true
+            sleep 2
+            adb shell screencap -p /sdcard/atlas-typing.png
+            adb pull /sdcard/atlas-typing.png atlas-typing.png || true
       - name: Upload APK and emulator screenshot
         uses: actions/upload-artifact@v4
         if: always()
@@ -83,3 +99,5 @@ jobs:
           path: |
             app/build/outputs/apk/debug/app-debug.apk
             atlas-smoke.png
+            atlas-typing.png
+            ui-checked.png
