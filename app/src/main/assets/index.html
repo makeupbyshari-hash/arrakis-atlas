@@ -189,10 +189,10 @@ function showSuggestions(){
  suggestions.hidden=false;
 }
 function selectTerm(t){
- selected=t;mode=null;setModeButtons();search.value=t.name;hideSuggestions();hideDetails();search.blur();render();
+ selected=t;mode=null;setModeButtons();search.value=t.name;hideSuggestions();hideDetails();search.blur();render();fit();
 }
 function setModeButtons(){document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));}
-function selectMode(next){if(mode===next){mode=null;}else mode=next;selected=null;search.value='';hideSuggestions();hideDetails();setModeButtons();render();}
+function selectMode(next){if(mode===next){mode=null;}else mode=next;selected=null;search.value='';hideSuggestions();hideDetails();setModeButtons();render();fit();}
 function resolve(){
  if(selected){
   return spots.filter(s=>s.items.includes(selected.id)).sort((a,b)=>order[a.level]-order[b.level]);
@@ -250,10 +250,10 @@ function openSpot(s){
 }
 function switchRegion(reset=true){
  tileImages.forEach(img=>img.remove());tileImages.clear();
- if(reset)fit();else updateView();
  render();
+ if(reset)fit();else updateView();
 }
-function allClear(){selected=null;mode=null;search.value='';hideSuggestions();hideDetails();setModeButtons();render();}
+function allClear(){selected=null;mode=null;search.value='';hideSuggestions();hideDetails();setModeButtons();render();fit();}
 search.addEventListener('input',showSuggestions);
 search.addEventListener('keydown',e=>{if(e.key==='Enter'){const all=getSuggestions(search.value.trim());if(all.length)selectTerm(all[0]);e.preventDefault();}else if(e.key==='Escape')hideSuggestions()});
 $('clearSearch').onclick=allClear;$('clearAll').onclick=allClear;
