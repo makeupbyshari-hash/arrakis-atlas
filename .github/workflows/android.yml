@@ -17,6 +17,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - name: Python for tile generation
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Android SDK
         uses: android-actions/setup-android@v3
         with:
@@ -55,8 +59,8 @@ jobs:
           file app/src/main/assets/map.jpg app/src/main/assets/deep_desert.jpg
       - name: Create zoomable map tile pyramids
         run: |
-          python3 -m pip install --user Pillow
-          python3 tools/build_tiles.py
+          python -m pip install Pillow
+          python tools/build_tiles.py
           test -s app/src/main/assets/tiles/hagga/4/0_0.jpg
           test -s app/src/main/assets/tiles/deep/4/15_15.jpg
           echo "Offline tile pyramid generated"
