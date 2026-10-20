@@ -12,6 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Accept only current source revision
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          LATEST=$(gh api "repos/$REPO/branches/main" --jq .commit.sha)
+          if [ "$LATEST" != "$SOURCE_SHA" ]; then
+            echo "Outdated APK source revision; refusing to publish."
+            exit 1
+          fi
       - name: Download APK from successful tested build
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
