@@ -4,6 +4,8 @@
 <section><h2>Projekt</h2><label for="projects">Gespeicherte Projekte</label><select id="projects"></select><div class="grid"><button id="newProject">Neues Projekt</button><button id="deleteProject">Projekt löschen</button></div><label for="projectName">Projektname</label><input id="projectName" placeholder="z. B. Buggy mit Cutter und Stauraum"><label for="itemSearch">Bauteil oder Gegenstand suchen</label><input id="itemSearch" list="itemOptions" placeholder="Deutscher oder englischer Name"><datalist id="itemOptions"></datalist><div class="grid"><label>Menge<input type="number" min="1" max="99999" id="amount" value="1"></label><button class="primary" id="addItem">Zum Projekt hinzufügen</button></div><div id="projectItems"></div></section>
 <section><h2>Mein Lager</h2><p class="muted">Vorhandene Gegenstände und bereits gebaute Komponenten werden automatisch abgezogen.</p><label>Gegenstand<input id="stockName" list="itemOptions"></label><div class="grid"><label>Anzahl<input type="number" min="0" id="stockAmount" value="1"></label><button id="saveStock">Bestand speichern</button></div><div id="stockList"></div></section>
 <section><h2>Rezeptdaten</h2><p class="muted">Ein fehlendes Rezept bedeutet nicht, dass der Gegenstand im Spiel nicht herstellbar ist. Bis ein Rezept geprüft wurde, kannst du es selbst hinterlegen. Keine erfundenen Materialmengen.</p><label>Gegenstand<input id="recipeName" list="itemOptions"></label><label>Benötigte Werkstatt / Maschine<input id="station" placeholder="Falls bekannt"></label><label>Materialien (eine Zeile je Zutat: Anzahl ; Name)</label><textarea id="ingredients" rows="5" placeholder="4 ; Beispielmaterial&#10;2 ; Beispielbauteil"></textarea><button id="saveRecipe">Rezept speichern</button><div id="recipeStatus" class="muted"></div></section>
+<section><h2>Fahrzeug-Konfiguration</h2><p class="muted">Wähle die tatsächlich benötigten Fahrzeugteile und Zusatzmodule für dein Projekt. Cutter und Stauraum können einzeln ausgewählt werden.</p><div class="grid"><label>Fahrzeug<select id="vehicleType"><option value="buggy">Buggy</option><option value="sandbike">Sandbike</option><option value="ornithopter">Ornithopter</option><option value="carrier">Frachtthopter</option></select></label><label>Stufe<select id="vehicleTier"><option value="3">Typ 3</option><option value="4">Typ 4</option><option value="5" selected>Typ 5</option><option value="6">Typ 6</option></select></label></div><div id="vehicleParts"></div><button id="addVehicle">Ausgewählte Teile übernehmen</button></section>
+<section><h2>Sicherung und Übertragung</h2><p class="muted">Bei einer eigenständig installierten neuen App-Version werden vorhandene Daten nicht automatisch übernommen. Hier kannst du Projekte, Rezepte und Lagerbestand als Text sichern und übertragen.</p><div class="grid"><button id="exportData">Sicherung anzeigen</button><button id="importData">Eingefügten Text übernehmen</button></div><label>Sicherungstext<textarea id="backupText" rows="3" spellcheck="false" placeholder="Sicherungstext zum Kopieren oder Einfügen"></textarea></label></section>
 <section><h2>Gesamtberechnung</h2><button class="primary" id="calculate">Materialbedarf berechnen</button><div id="results" aria-live="polite"></div></section>
 <script src="items.js"></script><script src="extra.js"></script><script src="recipes.js"></script><script>
 (()=>{'use strict';
@@ -12,7 +14,20 @@ const norm=s=>String(s||'').trim().toLocaleLowerCase('de-DE').normalize('NFD').r
 const items=Array.isArray(window.ARRAKIS_ITEMS)?window.ARRAKIS_ITEMS:[];
 const aliases=new Map();items.forEach(x=>{if(x.name)aliases.set(norm(x.name),x.name)});
 const extra=window.ATLAS_EXTRA||{};
-const knownRecipes=window.ATLAS_RECIPES||{};
+const gameData=window.ATLAS_RECIPE_DATA||{items:{},names:{}};
+const gameItems=gameData.items||{};
+const gameNames=gameData.names||{};
+const knownRecipes=Object.assign({},window.ATLAS_RECIPES||{});
+const stationGerman={SurvivalFabricator:'Überlebensfabrikator',AdvancedSurvivalFabricator:'Fortschrittlicher Überlebensfabrikator',VehicleFabricator:'Fahrzeugfabrikator',GarmentFabricator:'Kleidungsfabrikator',AdvancedGarmentFabricator:'Fortschrittlicher Kleidungsfabrikator'};
+const codeName=id=>gameNames[id]||id;
+for(const [id,rec] of Object.entries(gameItems)){
+ const name=codeName(id);
+ aliases.set(norm(id),name);aliases.set(norm(name),name);
+ const station=Array.isArray(rec.station)?rec.station.map(x=>stationGerman[x]||x).join(', '):String(rec.station||'');
+ knownRecipes[name]={output:rec.output||1,station,ingredients:(rec.ingredients||[]).map(x=>({name:codeName(x.id),qty:x.qty})),source:rec.source};
+}
+for(const [id,rec] of Object.entries(gameItems))for(const ing of rec.ingredients||[])aliases.set(norm(ing.id),codeName(ing.id));
+
 Object.values(extra.vendors||{}).forEach(v=>(v.goods||[]).forEach(g=>{if(g[0]&&g[1]){aliases.set(norm(g[1]),g[0]);aliases.set(norm(g[0]),g[0])}})); 
 let db;try{db=JSON.parse(localStorage.getItem(key))}catch(e){}if(!db||typeof db!=='object')db={projects:[],recipes:{},stock:{}};
 db.projects=Array.isArray(db.projects)?db.projects:[];db.recipes=db.recipes||{};db.stock=db.stock||{};
@@ -48,7 +63,8 @@ function calculate(){
   if(stack.includes(name)){cycles.add([...stack,name].join(' → '));return}
   if(recipe.station)stations.add(recipe.station);
   if(!recipe.ingredients.length){needs[name]=(needs[name]||0)+qty;unknown.add(name);return}
-  recipe.ingredients.forEach(ing=>expand(ing.name,ing.qty*qty,[...stack,name]));
+  const batches=Math.ceil(qty/Math.max(1,Number(recipe.output)||1));
+  recipe.ingredients.forEach(ing=>expand(ing.name,ing.qty*batches,[...stack,name]));
  };
  project().items.forEach(x=>expand(x.name,x.qty,[]));
  const out=$('results');out.replaceChildren();
@@ -61,7 +77,46 @@ function calculate(){
  if(cycles.size){heading('Rezeptkreislauf erkannt');list([...cycles])}
 }
 $('calculate').onclick=calculate;
-const data=$('itemOptions');const names=new Set(items.map(x=>canonical(x.name)).filter(Boolean));Object.values(extra.vendors||{}).forEach(v=>(v.goods||[]).forEach(g=>{if(g[0])names.add(g[0])}));[...names].sort((a,b)=>a.localeCompare(b,'de')).forEach(name=>{const o=document.createElement('option');o.value=name;data.append(o)});
-render();calculate();
+const data=$('itemOptions');const names=new Set([...items.map(x=>canonical(x.name)).filter(Boolean),...Object.values(gameNames)]);Object.values(extra.vendors||{}).forEach(v=>(v.goods||[]).forEach(g=>{if(g[0])names.add(g[0])}));[...names].sort((a,b)=>a.localeCompare(b,'de')).forEach(name=>{const o=document.createElement('option');o.value=name;data.append(o)});
+
+function renderVehicle(){
+ const root=$('vehicleParts');root.replaceChildren();
+ const type=$('vehicleType').value,tier=$('vehicleTier').value;
+ const words=type==='carrier'?['carrier','cargo','carryall','carry-all','frachtthopter','transportornithopter']:type==='ornithopter'?['ornithopter','scoutthopter','assaultthopter']:type==='sandbike'?['sandbike','sand bike']:['buggy'];
+ const candidates=Object.entries(gameItems).filter(([id,rec])=>{
+   const hay=(id+' '+codeName(id)).toLowerCase();
+   return words.some(w=>hay.includes(w)) && (hay.includes('t'+tier)||hay.includes('typ '+tier)||hay.includes('mk'+tier)||hay.includes('tier'+tier));
+ }).sort((a,b)=>codeName(a[0]).localeCompare(codeName(b[0]),'de')).slice(0,75);
+ if(!candidates.length){root.append(elt('p','Für diese Auswahl wurden keine passenden Teile gefunden. Du kannst die Gegenstände oben einzeln suchen.'));return}
+ candidates.forEach(([id])=>{
+   const line=elt('label','');line.className='line';
+   const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.value=id;checkbox.style.width='25px';checkbox.style.minHeight='25px';
+   line.append(checkbox,elt('span',codeName(id)));root.append(line);
+ });
+}
+$('vehicleType').onchange=renderVehicle;
+$('vehicleTier').onchange=renderVehicle;
+$('addVehicle').onclick=()=>{
+ let added=0;
+ $('vehicleParts').querySelectorAll('input:checked').forEach(c=>{
+  const name=codeName(c.value),arr=project().items,found=arr.find(x=>norm(x.name)===norm(name));
+  if(found)found.qty++;else arr.push({name,qty:1});added++;
+ });
+ if(!added){alert('Bitte zuerst Bauteile auswählen.');return}
+ save();render();calculate();renderVehicle();
+};
+$('exportData').onclick=()=>{
+ $('backupText').value=JSON.stringify({format:'arrakis-workshop-v1',data:db});
+ $('backupText').focus();$('backupText').select();
+ try{document.execCommand('copy')}catch(e){}
+};
+$('importData').onclick=()=>{
+ let data;try{data=JSON.parse($('backupText').value)}catch(e){alert('Sicherungstext ist kein gültiges JSON.');return}
+ if(data?.format!=='arrakis-workshop-v1'||!data.data||!Array.isArray(data.data.projects)||!data.data.projects.length){alert('Keine gültige Arrakis-Atlas-Sicherung.');return}
+ if(!confirm('Aktuelle Projekte und Lager durch die Sicherung ersetzen?'))return;
+ db={projects:data.data.projects,stock:data.data.stock||{},recipes:data.data.recipes||{}};
+ active=db.projects[0].id;save();render();calculate();
+};
+render();calculate();renderVehicle();
 })();
 </script></body></html>
