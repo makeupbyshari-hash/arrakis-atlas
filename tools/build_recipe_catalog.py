@@ -46,6 +46,17 @@ def flatten_german(data):
 CURATED = {
     "t5radiatedcorecomponent": "Verstrahlte Schlacke",
     "t6irradiatedcore": "Verstrahlter Kern",
+    "buggychassis_5": "Buggy, Chassis Typ 5",
+    "buggymining_5": "Buggy, Cutteray Typ 5",
+    "buggymining_unique_yieldincrease_05": "Buggy, fokussierter Cutteray Typ 5",
+    "ornithoptertransportchassis_6": "Frachtthopter, Chassis Typ 6",
+    "ornithoptertransporthull_6": "Frachtthopter, Hauptrumpf Typ 6",
+    "ornithoptertransporthullfront_6": "Frachtthopter, Seitenpanzerung Typ 6",
+    "ornithoptertransporthullback_6": "Frachtthopter, Heckpanzerung Typ 6",
+    "ornithoptertransportlocomotion_6": "Frachtthopter, Flügel Typ 6",
+    "ornithoptertransportgenerator_6": "Frachtthopter, Generator Typ 6",
+    "ornithoptertransportengine_6": "Frachtthopter, Triebwerk Typ 6",
+    "containervehicle": "Frachtcontainer für Frachtthopter",
     "radiation_suit_t5": "Strahlenanzug Typ 5",
 }
 def local_name(code, fallback=None):
@@ -155,12 +166,13 @@ for code, record in raw.items():
 
 if len(recipes) < 1000:
     raise RuntimeError("Fewer than 1,000 recipes survived validation")
-names = {ident: local_name(ident) for ident in all_ids}
+names = dict(localized)
+names.update({ident: local_name(ident) for ident in all_ids})
 # Always use IDs for calculation. Display names may be duplicated across quality levels.
 payload = {
     "items": recipes,
     "names": names,
-    "germanIds": sorted(set(localized).intersection(all_ids) | set(CURATED).intersection(all_ids)),
+    "germanIds": sorted(set(localized) | set(CURATED)),
     "source": RECIPE_URL,
     "snapshotCount": len(raw),
 }
@@ -174,6 +186,7 @@ audit = {
     "sourceRecipes": len(raw),
     "resolvedNames": len(names),
     "verifiedGermanNames": len(payload["germanIds"]),
+    "recipeIdsWithVerifiedGermanNames": len(set(recipes).intersection(localized) | set(recipes).intersection(CURATED)),
     "germanDatabaseItems": len(localized),
     "generatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     "sources": [RECIPE_URL, LOCALE_URL],
