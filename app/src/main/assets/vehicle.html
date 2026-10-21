@@ -1,0 +1,13 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Arrakis Atlas · Fahrzeugplaner</title><link rel="stylesheet" href="vehicle.css"></head><body>
+<nav><a href="index.html">← Karte</a><a href="workshop.html">Werkstatt &amp; Projekte →</a></nav>
+<h1>Fahrzeug konfigurieren</h1><p class="muted">Erst festlegen, wofür du das Fahrzeug brauchst. Danach werden die passenden Bauteile und deren Herstellungszutaten berechnet.</p>
+<section><h2>1. Fahrzeug und Einsatzzweck</h2>
+<label for="vehicle">Fahrzeug</label><select id="vehicle"><option value="buggy">Buggy</option><option value="sandbike">Sandbike</option><option value="scout">Scoutthopter</option><option value="combat">Kampfthopter</option><option value="carrier">Frachtthopter</option></select>
+<div class="grid"><div><label for="purpose">Wofür brauchst du es?</label><select id="purpose"></select></div><div><label for="tier">Bauteilstufe</label><select id="tier"></select></div></div><p id="purposeHint" class="muted"></p></section>
+<div id="summary" aria-live="polite"></div>
+<section><h2>2. Bauteile auswählen</h2><p class="muted">Häkchen und Anzahl anpassen. Unter jedem Teil stehen die genauen Zutaten aus dem hinterlegten Rezept.</p><div id="parts"></div></section>
+<section><h2>3. Was hast du schon?</h2><p class="muted">Bauteile und Materialien im Lager werden von der Rechnung abgezogen.</p>
+<label for="stockItem">Vorhandener Gegenstand</label><input id="stockItem" list="nameOptions" placeholder="Gegenstand suchen"><datalist id="nameOptions"></datalist>
+<div class="grid"><div><label for="stockQty">Anzahl</label><input id="stockQty" type="number" min="0" value="1"></div><div class="bottom"><button id="addStock">Bestand speichern</button></div></div><div id="stockList"></div></section>
+<section><h2>4. Gesamter Materialbedarf</h2><div id="results" aria-live="polite"></div><button class="primary" id="saveProject">Als Bauprojekt speichern</button><p id="saveMessage" class="muted" aria-live="polite"></p></section>
+<script src="items.js"></script><script src="extra.js"></script><script src="recipes.js"></script><script src="vehicle_specs.js"></script><script src="vehicle_calc.js"></script><script src="vehicle.js"></script></body></html>
