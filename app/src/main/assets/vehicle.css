@@ -22,3 +22,5 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 @media(max-width:550px){.columns,.grid{grid-template-columns:1fr}h1{font-size:22px}}
 
 .panelDetails{border:1px solid var(--line);border-radius:13px;background:var(--panel);margin:15px 0}.panelDetails>summary{padding:17px;color:var(--gold);font-weight:700;cursor:pointer;min-height:55px}.panelContent{padding:0 14px 14px}.panelDetails>summary::marker{color:var(--gold)}#summary{position:relative;top:auto;z-index:1}
+
+.moreResults{border-top:1px solid var(--line);padding-top:7px;margin-top:7px}.moreResults summary{min-height:44px;padding:10px 0;color:var(--gold);font-weight:650;cursor:pointer}.panelDetails[open]>summary{border-bottom:1px solid var(--line);margin-bottom:12px}#demandSection{border-color:#927750}
