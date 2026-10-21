@@ -8,7 +8,7 @@ permissions:
   actions: read
 jobs:
   release:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_commit.message == 'Release v1.0.11' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -32,14 +32,14 @@ jobs:
           mkdir -p out
           gh run download "$RUN_ID" -R "$REPO" --name Arrakis-Atlas-APK-and-test -D out
           test -s out/app/build/outputs/apk/debug/app-debug.apk
-          cp out/app/build/outputs/apk/debug/app-debug.apk Arrakis_Atlas_2026_v1.0.11.apk
+          cp out/app/build/outputs/apk/debug/app-debug.apk Arrakis_Atlas_2026_v1.0.12.apk
       - name: Publish beta APK as directly downloadable release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
         run: |
-          if gh release view v1.0.11 -R "$REPO" >/dev/null 2>&1; then
-            gh release upload v1.0.11 Arrakis_Atlas_2026_v1.0.11.apk -R "$REPO" --clobber
+          if gh release view v1.0.12 -R "$REPO" >/dev/null 2>&1; then
+            gh release upload v1.0.12 Arrakis_Atlas_2026_v1.0.12.apk -R "$REPO" --clobber
           else
-            gh release create v1.0.11 Arrakis_Atlas_2026_v1.0.11.apk -R "$REPO" --title "Arrakis Atlas 1.0.11 (Beta)" --prerelease --notes "Beta 2026: deutsche Händlerwaren werden automatisch in die Itemsuche aufgenommen. Neue Farmorte für Verstrahlte Schlacke: Sheol-Wrackgebiet, Delphis, Ourea und dynamische Schiffswracks. Anbieter Arkady Demidenko mit ausgewiesenem Solari-Preis. Enthält zudem Händlermenüs, Erzgebiete, Taxis, Auftragstafeln und Atlas-App-Icon. Detaillierte externe Mehrstufenkarte noch nicht integriert. Der Item-Katalog ist vollständiger als die separat geprüften Fundorte. APK wurde im GitHub-Workflow gebaut und auf einem Android-Emulator auf Startabstürze geprüft. Diese Android-Beta benötigt kein eigenes Signierpasswort. Aufgrund wechselnder Debug-Signaturen ältere Installationen vor der Neuinstallation deinstallieren."
+            gh release create v1.0.12 Arrakis_Atlas_2026_v1.0.12.apk -R "$REPO" --title "Arrakis Atlas 1.0.12 (Beta)" --prerelease --notes "Werkstatt-Beta: Offline-Projekte, Lagerbestand, rekursive Berechnung und eigene Rezepte. Vollständige verifizierte Herstellungsrezepte fehlen noch; fehlende Daten werden kenntlich gemacht. Android-Emulator-Test im Build-Workflow."
           fi
