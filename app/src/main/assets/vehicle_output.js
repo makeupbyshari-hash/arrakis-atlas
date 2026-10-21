@@ -21,7 +21,7 @@ V.refresh=function(){
  const cols=el('div');cols.className='columns';
  const craft=el('div');craft.append(el('h3','Herzustellende Teile und Zwischenprodukte'));rows(result.produced,craft);
  const used=el('div');used.append(el('h3','Vorhandenes Material angerechnet'));rows(result.used,used);cols.append(craft,used);out.append(cols);
- const station=el('p',result.stations.length?'Werkstätten aus der Rezeptquelle: '+result.stations.join(', '):'Werkstatt / Maschine: nicht eindeutig in der Datenquelle angegeben.');
+ const station=el('p',result.stations.length?'Werkstätten aus der Rezeptquelle: '+result.stations.join(', '):'Fahrzeugbauteile: '+(Number(tier)>=6?'Fortschrittlicher Fahrzeugfabrikator':'Fahrzeugfabrikator')+' (laut deutschsprachiger Fahrzeugdatenbank; einzelne Sonderteile prüfen).');
  station.className='muted';out.append(station);
  if(result.cycles.length){const warning=el('p','Fehlerhafter Rezeptkreislauf: '+result.cycles.join('; '));warning.className='warning';out.append(warning)}
  if(Object.keys(result.surplus).length)out.append(el('p','Überschuss durch Rezeptmengen: '+Object.entries(result.surplus).map(([id,n])=>n+' × '+title(id)).join(', ')));
