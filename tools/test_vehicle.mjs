@@ -18,12 +18,12 @@ try{
  assert.equal(await page.locator('#partsDisclosure').getAttribute('open'),null,'Parts should start collapsed to reduce clutter');
  await page.screenshot({path:join(root,'vehicle-overview.png'),fullPage:true});
  assert.ok(await page.locator('#results').isVisible(),'Material summary must be immediately accessible');
- await page.locator('#partsDisclosure summary').click();
+ await page.locator('#partsDisclosure > summary').click();
  const parts=await page.locator('#parts').innerText();
  assert.ok(parts.includes('Cutteray Typ 5')&&parts.includes('Stauraum Typ 5'));
  const old=await page.evaluate(()=>VP.c.calculate(VP.planned.filter(x=>x.enabled),VP.db.stock));
  assert.ok(old.gather.water>0,'Missing water from recipe total');
- await page.locator('#stockDisclosure summary').click();
+ await page.locator('#stockDisclosure > summary').click();
  await page.locator('#stockItem').fill('Buggy, Cutteray Typ 5');
  await page.locator('#addStock').click();
  const now=await page.evaluate(()=>VP.c.calculate(VP.planned.filter(x=>x.enabled),VP.db.stock));
