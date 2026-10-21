@@ -3,6 +3,9 @@ package com.arrakis.atlas;
 import android.app.Activity;
 import android.os.Bundle;
 import android.graphics.Color;
+import android.os.Build;
+import android.view.WindowInsets;
+import android.widget.FrameLayout;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
@@ -28,7 +31,20 @@ public final class AtlasActivity extends Activity {
                     if (request.isForMainFrame()) showFallback("Die Karte konnte nicht geladen werden.");
                 }
             });
-            setContentView(map);
+            FrameLayout safeArea = new FrameLayout(this);
+            safeArea.addView(map, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+            // Android 15+ enforces edge-to-edge. Keep the app's header and buttons
+            // away from the system status/navigation bars without hiding those bars.
+            if (Build.VERSION.SDK_INT >= 35) {
+                safeArea.setOnApplyWindowInsetsListener((view, insets) -> {
+                    android.graphics.Insets system = insets.getInsets(
+                        WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                    view.setPadding(system.left, system.top, system.right, system.bottom);
+                    return insets;
+                });
+            }
+            setContentView(safeArea);
             map.loadUrl("file:///android_asset/index.html");
         } catch (RuntimeException e) {
             showFallback("Die Kartenansicht konnte nicht gestartet werden.");
