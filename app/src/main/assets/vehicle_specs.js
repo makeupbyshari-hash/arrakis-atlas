@@ -23,9 +23,9 @@ window.ATLAS_VEHICLES={
   mods:{combat:[['launcher',1]],storage:[['inventory',1]]},extra:[['boost',1]]},
  carrier:{label:'Frachtthopter',levels:[6],prefix:'ornithoptertransport',
   base:[['chassis',1],['hull',1],['hullfront',2],['hullback',2],['engine',1],['generator',1],['locomotion',8]],
-  purposes:[['vehicles','Buggy / Fahrzeug transportieren','Mit Transportgeschirr (im Datensatz nur Spiel-ID bekannt)'],
+  purposes:[['vehicles','Buggy / Fahrzeug transportieren','Für Fahrzeuge wie Buggy oder Sandcrawler. Laut Fahrzeugbeschreibung benötigt der Frachtthopter dafür keinen separat gelisteten Pflichtbausatz.'],
    ['cargo','Materialien transportieren','Frachtmodul als zusätzliche Option'],
    ['flight','Ohne Transportmodul fliegen','Nur Grundbauteile für das Fahrzeug']],
-  mods:{vehicles:[['harness',1]],cargo:[['containervehicle',1]],flight:[]},
-  extra:[['boost',1],['harness',1],['containervehicle',1]]}
+  mods:{vehicles:[],cargo:[['containervehicle',1]],flight:[]},
+  extra:[['boost',1],['containervehicle',1]]}
 };
