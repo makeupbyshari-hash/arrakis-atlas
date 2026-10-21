@@ -66,6 +66,10 @@ jobs:
           node --check /tmp/atlas-workshop.js
           node --check app/src/main/assets/items.js
           node --check app/src/main/assets/recipes.js
+          node --check app/src/main/assets/vehicle_specs.js
+          node --check app/src/main/assets/vehicle_calc.js
+          node --check app/src/main/assets/vehicle.js
+          node --check app/src/main/assets/vehicle_output.js
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -89,6 +93,7 @@ jobs:
         run: |
           npm install --no-save playwright-core
           node tools/test_ui.mjs
+          node tools/test_vehicle.mjs
       - name: Build installable APK without repository secrets
         run: gradle :app:assembleDebug --stacktrace
       - name: Enable Android emulator acceleration
@@ -105,10 +110,10 @@ jobs:
           script: |
             adb install -r app/build/outputs/apk/debug/app-debug.apk
             adb logcat -c
-            adb shell am start -W -n com.arrakis.atlas.beta13/com.arrakis.atlas.AtlasActivity
+            adb shell am start -W -n com.arrakis.atlas.beta14/com.arrakis.atlas.AtlasActivity
             sleep 15
-            adb shell pidof com.arrakis.atlas.beta13
-            ! adb logcat -d -s AndroidRuntime:E | grep -E 'FATAL EXCEPTION|com.arrakis.atlas.beta13'
+            adb shell pidof com.arrakis.atlas.beta14
+            ! adb logcat -d -s AndroidRuntime:E | grep -E 'FATAL EXCEPTION|com.arrakis.atlas.beta14'
             adb shell screencap -p /sdcard/atlas-smoke.png
             adb pull /sdcard/atlas-smoke.png atlas-smoke.png
             adb shell input tap 105 112 || true
