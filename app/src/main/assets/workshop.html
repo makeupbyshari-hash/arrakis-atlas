@@ -1,0 +1,64 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Arrakis Atlas · Werkstatt</title><style>
+:root{color-scheme:dark;font-family:system-ui,Arial;background:#111b22;color:#f5f0e5}*{box-sizing:border-box}body{margin:0;padding:14px;max-width:850px;margin:auto}h1{color:#f1cc8f;font-size:23px}h2{font-size:18px;color:#f1cc8f}a{color:#f1cc8f}button,input,select,textarea{font:inherit;border:1px solid #647b84;border-radius:9px;padding:11px;color:#fff;background:#223642;max-width:100%}button{cursor:pointer;min-height:44px}input,textarea{width:100%}label{display:block;margin:12px 0 5px}section{background:#1b2b34;padding:13px;border:1px solid #455965;border-radius:12px;margin:13px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.muted{color:#c0cad1;font-size:13px}.line{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #455965}.line input{width:86px}.line button{padding:7px} .warn{color:#ffd3a2}.good{color:#a5dfc2}ul{padding-left:20px}#results li{margin:7px 0}button.primary{background:#65502e;border-color:#e7c589}nav{display:flex;justify-content:space-between;align-items:center}</style></head><body>
+<nav><a href="index.html">← Zur Karte</a><strong>ARRAKIS ATLAS</strong></nav><h1>Werkstatt & Materialrechner</h1><p class="muted">Offline nutzbar. Eigene Rezepte und Lagerbestände bleiben auf diesem Gerät gespeichert. Nur hinterlegte, überprüfte Rezepte ergeben vollständige Materiallisten; fehlende Angaben werden ausdrücklich angezeigt.</p>
+<section><h2>Projekt</h2><label for="projects">Gespeicherte Projekte</label><select id="projects"></select><div class="grid"><button id="newProject">Neues Projekt</button><button id="deleteProject">Projekt löschen</button></div><label for="projectName">Projektname</label><input id="projectName" placeholder="z. B. Buggy mit Cutter und Stauraum"><label for="itemSearch">Bauteil oder Gegenstand suchen</label><input id="itemSearch" list="itemOptions" placeholder="Deutscher oder englischer Name"><datalist id="itemOptions"></datalist><div class="grid"><label>Menge<input type="number" min="1" max="99999" id="amount" value="1"></label><button class="primary" id="addItem">Zum Projekt hinzufügen</button></div><div id="projectItems"></div></section>
+<section><h2>Mein Lager</h2><p class="muted">Vorhandene Gegenstände und bereits gebaute Komponenten werden automatisch abgezogen.</p><label>Gegenstand<input id="stockName" list="itemOptions"></label><div class="grid"><label>Anzahl<input type="number" min="0" id="stockAmount" value="1"></label><button id="saveStock">Bestand speichern</button></div><div id="stockList"></div></section>
+<section><h2>Rezeptdaten</h2><p class="muted">Ein fehlendes Rezept bedeutet nicht, dass der Gegenstand im Spiel nicht herstellbar ist. Bis ein Rezept geprüft wurde, kannst du es selbst hinterlegen. Keine erfundenen Materialmengen.</p><label>Gegenstand<input id="recipeName" list="itemOptions"></label><label>Benötigte Werkstatt / Maschine<input id="station" placeholder="Falls bekannt"></label><label>Materialien (eine Zeile je Zutat: Anzahl ; Name)</label><textarea id="ingredients" rows="5" placeholder="4 ; Beispielmaterial&#10;2 ; Beispielbauteil"></textarea><button id="saveRecipe">Rezept speichern</button><div id="recipeStatus" class="muted"></div></section>
+<section><h2>Gesamtberechnung</h2><button class="primary" id="calculate">Materialbedarf berechnen</button><div id="results" aria-live="polite"></div></section>
+<script src="items.js"></script><script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id), key='arrakis-workshop-v1';
+const norm=s=>String(s||'').trim().toLocaleLowerCase('de-DE').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const items=Array.isArray(window.ARRAKIS_ITEMS)?window.ARRAKIS_ITEMS:[];
+const aliases=new Map();items.forEach(x=>{if(x.name)aliases.set(norm(x.name),x.name)}); 
+let db;try{db=JSON.parse(localStorage.getItem(key))}catch(e){}if(!db||typeof db!=='object')db={projects:[],recipes:{},stock:{}};
+db.projects=Array.isArray(db.projects)?db.projects:[];db.recipes=db.recipes||{};db.stock=db.stock||{};
+if(!db.projects.length)db.projects.push({id:'first',name:'Mein Bauprojekt',items:[]});
+let active=db.projects[0].id;
+const save=()=>{try{localStorage.setItem(key,JSON.stringify(db))}catch(e){alert('Speichern fehlgeschlagen: Gerätespeicher prüfen.')}};
+const canonical=s=>aliases.get(norm(s))||String(s||'').trim();
+const elt=(tag,text)=>{const e=document.createElement(tag);e.textContent=text;return e};
+const project=()=>db.projects.find(x=>x.id===active)||db.projects[0];
+const number=v=>Math.max(0,Math.min(999999,Math.floor(Number(v)||0)));
+const addLine=(host,name,qty,remove)=>{const line=elt('div','');line.className='line';const span=elt('span',name+' × '+qty),btn=elt('button','Entfernen');btn.onclick=remove;line.append(span,btn);host.append(line)};
+function render(){
+ const sel=$('projects');sel.replaceChildren();db.projects.forEach(p=>{const o=elt('option',p.name);o.value=p.id;sel.append(o)});sel.value=active;
+ $('projectName').value=project().name;
+ const host=$('projectItems');host.replaceChildren();project().items.forEach((it,i)=>addLine(host,it.name,it.qty,()=>{project().items.splice(i,1);save();render()}));
+ const stock=$('stockList');stock.replaceChildren();Object.entries(db.stock).filter(([n,q])=>q>0).sort().forEach(([n,q])=>addLine(stock,n,q,()=>{delete db.stock[n];save();render()}));
+}
+$('projects').onchange=e=>{active=e.target.value;render()};
+$('newProject').onclick=()=>{const p={id:'p'+Date.now(),name:'Neues Projekt',items:[]};db.projects.push(p);active=p.id;save();render()};
+$('deleteProject').onclick=()=>{if(db.projects.length===1){alert('Mindestens ein Projekt bleibt erhalten.');return}if(!confirm('Projekt wirklich löschen?'))return;db.projects=db.projects.filter(x=>x.id!==active);active=db.projects[0].id;save();render()};
+$('projectName').onchange=e=>{project().name=e.target.value.trim()||'Mein Projekt';save();render()};
+$('addItem').onclick=()=>{const name=canonical($('itemSearch').value),qty=number($('amount').value);if(!name||!qty)return;const it=project().items.find(x=>norm(x.name)===norm(name));if(it)it.qty+=qty;else project().items.push({name,qty});$('itemSearch').value='';save();render()};
+$('saveStock').onclick=()=>{const name=canonical($('stockName').value);if(!name)return;db.stock[name]=number($('stockAmount').value);save();render()};
+$('recipeName').onchange=()=>{const r=db.recipes[canonical($('recipeName').value)];$('station').value=r?.station||'';$('ingredients').value=(r?.ingredients||[]).map(x=>x.qty+' ; '+x.name).join('\n')};
+$('saveRecipe').onclick=()=>{const name=canonical($('recipeName').value);if(!name)return;const lines=$('ingredients').value.split(/\r?\n/).filter(x=>x.trim()),ingredients=[];for(const line of lines){const m=line.match(/^\s*(\d+)\s*;\s*(.+?)\s*$/);if(!m||!Number(m[1])){$('recipeStatus').textContent='Ungültige Zeile: '+line;return}ingredients.push({qty:number(m[1]),name:canonical(m[2])})}db.recipes[name]={station:$('station').value.trim(),ingredients,source:'Eigene Eingabe'};save();$('recipeStatus').textContent='Rezept lokal gespeichert: '+name};
+function calculate(){
+ const needs={},stock={...db.stock},missing=new Set(),stations=new Set(),cycles=new Set(),consumed={};
+ const expand=(name,qty,stack)=>{
+  if(!qty)return;
+  const have=number(stock[name]),used=Math.min(have,qty);stock[name]=have-used;if(used)consumed[name]=(consumed[name]||0)+used;qty-=used;if(!qty)return;
+  const recipe=db.recipes[name];
+  if(!recipe){needs[name]=(needs[name]||0)+qty;missing.add(name);return}
+  if(stack.includes(name)){cycles.add([...stack,name].join(' → '));return}
+  if(recipe.station)stations.add(recipe.station);
+  if(!recipe.ingredients.length){needs[name]=(needs[name]||0)+qty;missing.add(name);return}
+  recipe.ingredients.forEach(ing=>expand(ing.name,ing.qty*qty,[...stack,name]));
+ };
+ project().items.forEach(x=>expand(x.name,x.qty,[]));
+ const out=$('results');out.replaceChildren();
+ const heading=t=>out.append(elt('h2',t));
+ const list=arr=>{const ul=document.createElement('ul');arr.forEach(t=>ul.append(elt('li',t)));out.append(ul)};
+ heading('Noch zu beschaffen / herzustellen');list(Object.entries(needs).sort().map(([n,q])=>q+' × '+n).length?Object.entries(needs).sort().map(([n,q])=>q+' × '+n):['Kein offener Bedarf laut erfassten Rezepten']);
+ heading('Aus dem Lager abgezogen');list(Object.entries(consumed).sort().map(([n,q])=>q+' × '+n).length?Object.entries(consumed).sort().map(([n,q])=>q+' × '+n):['Keine Lagerbestände angerechnet']);
+ heading('Erforderliche Werkstätten');list([...stations].sort().length?[...stations].sort():['Noch keine Werkstätten hinterlegt']);
+ if(missing.size){heading('Unvollständige Rezeptdaten');const p=elt('p','Für diese Gegenstände fehlen geprüfte Zutaten. Die Gesamtsumme ist deshalb noch nicht vollständig:');p.className='warn';out.append(p);list([...missing].sort())}
+ if(cycles.size){heading('Rezeptkreislauf erkannt');list([...cycles])}
+}
+$('calculate').onclick=calculate;
+const data=$('itemOptions');items.slice(0,6000).forEach(x=>{if(x.name){const o=document.createElement('option');o.value=x.name;data.append(o)}});
+render();calculate();
+})();
+</script></body></html>
