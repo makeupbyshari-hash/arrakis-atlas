@@ -35,8 +35,8 @@ try{
  assert.ok(highRes,'Map zoom did not switch to highest map tiles');
  await page.locator('#reset').click();
  await page.locator('#search').fill('Komplex');
- await page.locator('#suggestions .suggest').filter({hasText:'Komplexe Maschinen'}).first().click();
- assert.equal(await page.locator('#search').inputValue(),'Komplexe Maschinen');
+ await page.locator('#suggestions .suggest').filter({hasText:'Komplexe Maschine'}).first().click();
+ assert.equal(await page.locator('#search').inputValue(),'Komplexe Maschine');
  assert.ok((await page.locator('#spotList .spot').count())>=4,'Multiple ironworks + unpinned sources expected');
  assert.equal(await page.locator('#pins .pin').count(),3,'Three distinct Ironworks regions must be pinned');
  await page.locator('#spotList .spot').first().click();
