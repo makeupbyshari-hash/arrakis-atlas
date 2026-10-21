@@ -20,3 +20,5 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 #summary{position:sticky;top:0;z-index:3;background:#14262bf3;border:1px solid #aa8756;border-radius:10px;padding:10px 12px;margin-top:10px}
 .warning{color:#f4d29b}#parts:empty:after{content:'Für diese Auswahl gibt es noch keine dokumentierten Bauteile.'}
 @media(max-width:550px){.columns,.grid{grid-template-columns:1fr}h1{font-size:22px}}
+
+.panelDetails{border:1px solid var(--line);border-radius:13px;background:var(--panel);margin:15px 0}.panelDetails>summary{padding:17px;color:var(--gold);font-weight:700;cursor:pointer;min-height:55px}.panelContent{padding:0 14px 14px}.panelDetails>summary::marker{color:var(--gold)}#summary{position:relative;top:auto;z-index:1}
