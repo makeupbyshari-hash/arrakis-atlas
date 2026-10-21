@@ -68,20 +68,8 @@ jobs:
         run: |
           npm install --no-save playwright-core
           node tools/test_ui.mjs
-      - name: Decrypt permanent signing key
-        env:
-          ATLAS_SIGNING_PASSWORD: ${{ secrets.ATLAS_SIGNING_PASSWORD }}
-        run: |
-          set -e
-          test -f .github/signing/atlas-release.p12.enc
-          test "${#ATLAS_SIGNING_PASSWORD}" -ge 32
-          python -m pip install 'cryptography>=44,<48'
-          python tools/signing_vault.py decrypt .github/signing/atlas-release.p12.enc "$RUNNER_TEMP/atlas-release.p12"
-          echo "ATLAS_KEYSTORE_FILE=$RUNNER_TEMP/atlas-release.p12" >> "$GITHUB_ENV"
-      - name: Build signed release APK
-        env:
-          ATLAS_SIGNING_PASSWORD: ${{ secrets.ATLAS_SIGNING_PASSWORD }}
-        run: gradle :app:assembleRelease --stacktrace
+      - name: Build installable APK without repository secrets
+        run: gradle :app:assembleDebug --stacktrace
       - name: Enable Android emulator acceleration
         run: |
           if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
@@ -94,7 +82,7 @@ jobs:
           arch: x86_64
           profile: pixel_6
           script: |
-            adb install -r app/build/outputs/apk/release/app-release.apk
+            adb install -r app/build/outputs/apk/debug/app-debug.apk
             adb logcat -c
             adb shell am start -W -n com.arrakis.atlas/.AtlasActivity
             sleep 15
@@ -113,7 +101,7 @@ jobs:
         with:
           name: Arrakis-Atlas-APK-and-test
           path: |
-            app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/apk/debug/app-debug.apk
             atlas-smoke.png
             atlas-typing.png
             ui-checked.png
