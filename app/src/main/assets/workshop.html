@@ -6,7 +6,7 @@
 <section><h2>Rezeptdaten</h2><p class="muted">Ein fehlendes Rezept bedeutet nicht, dass der Gegenstand im Spiel nicht herstellbar ist. Bis ein Rezept geprüft wurde, kannst du es selbst hinterlegen. Keine erfundenen Materialmengen.</p><label>Gegenstand<input id="recipeName" list="itemOptions"></label><label>Benötigte Werkstatt / Maschine<input id="station" placeholder="Falls bekannt"></label><label>Materialien (eine Zeile je Zutat: Anzahl ; Name)</label><textarea id="ingredients" rows="5" placeholder="4 ; Beispielmaterial&#10;2 ; Beispielbauteil"></textarea><button id="saveRecipe">Rezept speichern</button><div id="recipeStatus" class="muted"></div></section>
 <section><h2>Fahrzeug-Konfiguration</h2><p class="muted">Wähle die tatsächlich benötigten Fahrzeugteile und Zusatzmodule für dein Projekt. Cutter und Stauraum können einzeln ausgewählt werden.</p><div class="grid"><label>Fahrzeug<select id="vehicleType"><option value="buggy">Buggy</option><option value="sandbike">Sandbike</option><option value="ornithopter">Ornithopter</option><option value="carrier">Frachtthopter</option></select></label><label>Stufe<select id="vehicleTier"><option value="3">Typ 3</option><option value="4">Typ 4</option><option value="5" selected>Typ 5</option><option value="6">Typ 6</option></select></label></div><div id="vehicleParts"></div><button id="addVehicle">Ausgewählte Teile übernehmen</button></section>
 <section><h2>Sicherung und Übertragung</h2><p class="muted">Bei einer eigenständig installierten neuen App-Version werden vorhandene Daten nicht automatisch übernommen. Hier kannst du Projekte, Rezepte und Lagerbestand als Text sichern und übertragen.</p><div class="grid"><button id="exportData">Sicherung anzeigen</button><button id="importData">Eingefügten Text übernehmen</button></div><label>Sicherungstext<textarea id="backupText" rows="3" spellcheck="false" placeholder="Sicherungstext zum Kopieren oder Einfügen"></textarea></label></section>
-<section><h2>Gesamtberechnung</h2><button class="primary" id="calculate">Materialbedarf berechnen</button><div id="results" aria-live="polite"></div></section>
+<section><h2>Gesamtberechnung</h2><button class="primary" id="calculate">Materialbedarf berechnen</button><div id="results" aria-live="polite"></div><h2>Projekte vergleichen</h2><label>Vergleichen mit<select id="compareProject"></select></label><button id="compareButton">Zusätzlichen Materialbedarf anzeigen</button><div id="comparison" aria-live="polite"></div></section>
 <script src="items.js"></script><script src="extra.js"></script><script src="recipes.js"></script><script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id), key='arrakis-workshop-v1';
@@ -42,6 +42,7 @@ const addLine=(host,name,qty,remove)=>{const line=elt('div','');line.className='
 function render(){
  const sel=$('projects');sel.replaceChildren();db.projects.forEach(p=>{const o=elt('option',p.name);o.value=p.id;sel.append(o)});sel.value=active;
  $('projectName').value=project().name;
+ const compare=$('compareProject');compare.replaceChildren();db.projects.forEach(p=>{if(p.id!==active){const o=elt('option',p.name);o.value=p.id;compare.append(o)}});
  const host=$('projectItems');host.replaceChildren();project().items.forEach((it,i)=>addLine(host,it.name,it.qty,()=>{project().items.splice(i,1);save();render()}));
  const stock=$('stockList');stock.replaceChildren();Object.entries(db.stock).filter(([n,q])=>q>0).sort().forEach(([n,q])=>addLine(stock,n,q,()=>{delete db.stock[n];save();render()}));
 }
@@ -53,30 +54,79 @@ $('addItem').onclick=()=>{const name=canonical($('itemSearch').value),qty=number
 $('saveStock').onclick=()=>{const name=canonical($('stockName').value);if(!name)return;db.stock[name]=number($('stockAmount').value);save();render()};
 $('recipeName').onchange=()=>{const r=db.recipes[canonical($('recipeName').value)]||knownRecipes[canonical($('recipeName').value)];$('station').value=r?.station||'';$('ingredients').value=(r?.ingredients||[]).map(x=>x.qty+' ; '+x.name).join('\n')};
 $('saveRecipe').onclick=()=>{const name=canonical($('recipeName').value);if(!name)return;const lines=$('ingredients').value.split(/\r?\n/).filter(x=>x.trim()),ingredients=[];for(const line of lines){const m=line.match(/^\s*(\d+)\s*;\s*(.+?)\s*$/);if(!m||!Number(m[1])){$('recipeStatus').textContent='Ungültige Zeile: '+line;return}ingredients.push({qty:number(m[1]),name:canonical(m[2])})}db.recipes[name]={station:$('station').value.trim(),ingredients,source:'Eigene Eingabe'};save();$('recipeStatus').textContent='Rezept lokal gespeichert: '+name};
-function calculate(){
- const needs={},stock={...db.stock},unknown=new Set(),stations=new Set(),cycles=new Set(),consumed={};
- const expand=(name,qty,stack)=>{
-  if(!qty)return;
-  const have=number(stock[name]),used=Math.min(have,qty);stock[name]=have-used;if(used)consumed[name]=(consumed[name]||0)+used;qty-=used;if(!qty)return;
-  const recipe=db.recipes[name]||knownRecipes[name];
-  if(!recipe){needs[name]=(needs[name]||0)+qty;unknown.add(name);return}
-  if(stack.includes(name)){cycles.add([...stack,name].join(' → '));return}
-  if(recipe.station)stations.add(recipe.station);
-  if(!recipe.ingredients.length){needs[name]=(needs[name]||0)+qty;unknown.add(name);return}
-  const batches=Math.ceil(qty/Math.max(1,Number(recipe.output)||1));
-  recipe.ingredients.forEach(ing=>expand(ing.name,ing.qty*batches,[...stack,name]));
+function calculate(p=project(),show=true){
+ const demand={},used={},needs={},crafted={},stations=new Set(),cycles=new Set(),direct=new Set(),surplus={};
+ const stock={};for(const [name,qty] of Object.entries(db.stock))stock[canonical(name)]=(stock[canonical(name)]||0)+number(qty);
+ const states={},order=[],edges={};
+ const recipeOf=name=>db.recipes[name]||knownRecipes[name];
+ const walk=(name,stack=[])=>{
+   if(states[name]===1){cycles.add([...stack,name].join(' → '));return}
+   if(states[name]===2)return;
+   states[name]=1;
+   const recipe=recipeOf(name);
+   const children=recipe && Array.isArray(recipe.ingredients)?recipe.ingredients.map(i=>canonical(i.name)):[];
+   edges[name]=children;
+   children.forEach(child=>walk(child,[...stack,name]));
+   states[name]=2;order.push(name);
  };
- project().items.forEach(x=>expand(x.name,x.qty,[]));
+ for(const it of p.items||[]){
+   const name=canonical(it.name);
+   if(!name)continue;
+   demand[name]=(demand[name]||0)+number(it.qty);
+   walk(name);
+ }
+ order.reverse().forEach(name=>{
+   let qty=demand[name]||0;if(!qty)return;
+   const onHand=number(stock[name]),taken=Math.min(onHand,qty);
+   if(taken){stock[name]=onHand-taken;used[name]=(used[name]||0)+taken;qty-=taken}
+   if(!qty)return;
+   const recipe=recipeOf(name);
+   if(!recipe||!Array.isArray(recipe.ingredients)||!recipe.ingredients.length){
+     needs[name]=(needs[name]||0)+qty;direct.add(name);return;
+   }
+   const output=Math.max(1,Number(recipe.output)||1),batches=Math.ceil(qty/output);
+   const completed=batches*output;
+   crafted[name]=(crafted[name]||0)+completed;
+   if(completed>qty)surplus[name]=(surplus[name]||0)+completed-qty;
+   if(recipe.station){
+     (Array.isArray(recipe.station)?recipe.station:[recipe.station]).forEach(x=>stations.add(String(x)));
+   }
+   recipe.ingredients.forEach(ing=>{
+     const child=canonical(ing.name),quantity=Number(ing.qty)||0;
+     if(quantity>0)demand[child]=(demand[child]||0)+quantity*batches;
+   });
+ });
+ const result={needs,used,crafted,stations:[...stations],surplus,cycles:[...cycles],direct:[...direct]};
+ if(!show)return result;
  const out=$('results');out.replaceChildren();
  const heading=t=>out.append(elt('h2',t));
- const list=arr=>{const ul=document.createElement('ul');arr.forEach(t=>ul.append(elt('li',t)));out.append(ul)};
- heading('Noch zu beschaffen / herzustellen');list(Object.entries(needs).sort().map(([n,q])=>q+' × '+n).length?Object.entries(needs).sort().map(([n,q])=>q+' × '+n):['Kein offener Bedarf laut erfassten Rezepten']);
- heading('Aus dem Lager abgezogen');list(Object.entries(consumed).sort().map(([n,q])=>q+' × '+n).length?Object.entries(consumed).sort().map(([n,q])=>q+' × '+n):['Keine Lagerbestände angerechnet']);
- heading('Erforderliche Werkstätten');list([...stations].sort().length?[...stations].sort():['Noch keine Werkstätten hinterlegt']);
- if(unknown.size){heading('Direkt beschaffen oder Rezept noch nicht erfasst');const p=elt('p','Diese Gegenstände werden als eigenständiger Bedarf gezählt. Sie können Rohstoffe, Beute, Händlerware oder Gegenstände mit noch unbekanntem Rezept sein. Nicht jeder Gegenstand ist herstellbar.');p.className='warn';out.append(p);list([...unknown].sort())}
- if(cycles.size){heading('Rezeptkreislauf erkannt');list([...cycles])}
+ const showList=lines=>{const ul=document.createElement('ul');(lines.length?lines:['Keine']).forEach(t=>ul.append(elt('li',t)));out.append(ul)};
+ const fmt=d=>Object.entries(d).sort((a,b)=>a[0].localeCompare(b[0],'de')).map(([n,q])=>Number(q).toLocaleString('de-DE')+' × '+n);
+ heading('Direkt zu beschaffen (Rohstoffe, Beute, Handel)');showList(fmt(needs));
+ heading('Herzustellen (inklusive Zwischenbauteilen)');showList(fmt(crafted));
+ heading('Aus deinem Lager angerechnet');showList(fmt(used));
+ heading('Benötigte Werkstätten / Maschinen');showList([...stations].sort());
+ if(Object.keys(surplus).length){heading('Überschuss durch Rezept-Packungsgrößen');showList(fmt(surplus))}
+ if(direct.size){
+   const p=elt('p','Gegenstände ohne hinterlegtes Herstellungsrezept zählen als direkte Beschaffung. Nicht alle Gegenstände sind herstellbar. Farm- und Händlerquellen kannst du auf der Karte suchen.');
+   p.className='muted';out.append(p);
+   const links=elt('div','');
+   [...direct].sort().slice(0,35).forEach(name=>{const a=elt('a','Karte: '+name+' ↗');a.href='index.html?item='+encodeURIComponent(name);a.style.display='block';a.style.padding='5px 0';links.append(a)});
+   out.append(links);
+ }
+ if(cycles.size){heading('Rezeptkreislauf – bitte Daten prüfen');showList([...cycles]);}
+ return result;
 }
-$('calculate').onclick=calculate;
+$('calculate').onclick=()=>calculate();
+$('compareButton').onclick=()=>{
+ const other=db.projects.find(x=>x.id===$('compareProject').value),out=$('comparison');out.replaceChildren();
+ if(!other){out.append(elt('p','Zum Vergleichen ein zweites Projekt anlegen.'));return}
+ const current=calculate(project(),false).needs,previous=calculate(other,false).needs;
+ const names=new Set([...Object.keys(current),...Object.keys(previous)]);
+ const delta=[...names].map(name=>[name,(current[name]||0)-(previous[name]||0)]).filter(x=>x[1]!==0).sort((a,b)=>a[0].localeCompare(b[0],'de'));
+ out.append(elt('p','Differenz gegenüber '+other.name+' (mit jeweils demselben Lagerbestand):'));
+ const ul=document.createElement('ul');delta.forEach(([name,qty])=>ul.append(elt('li',(qty>0?'+':'')+qty+' × '+name)));if(!delta.length)ul.append(elt('li','Keine Materialdifferenz'));out.append(ul);
+};
 const data=$('itemOptions');const names=new Set([...items.map(x=>canonical(x.name)).filter(Boolean),...Object.values(gameNames)]);Object.values(extra.vendors||{}).forEach(v=>(v.goods||[]).forEach(g=>{if(g[0])names.add(g[0])}));[...names].sort((a,b)=>a.localeCompare(b,'de')).forEach(name=>{const o=document.createElement('option');o.value=name;data.append(o)});
 
 function renderVehicle(){
