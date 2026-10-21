@@ -1,0 +1,64 @@
+name: Initialize permanent Android signing
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/initialize-signing.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  initialize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ATLAS_SIGNING_PASSWORD: ${{ secrets.ATLAS_SIGNING_PASSWORD }}
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+      - name: Check private password is configured
+        run: |
+          if [ "${#ATLAS_SIGNING_PASSWORD}" -lt 32 ]; then
+            echo "Repository secret ATLAS_SIGNING_PASSWORD is missing or shorter than 32 characters."
+            exit 1
+          fi
+          if [ -e .github/signing/atlas-release.p12.enc ]; then
+            echo "Permanent encrypted signing key already exists; no new signing key will be generated."
+            exit 0
+          fi
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install cryptography for authenticated encryption
+        run: python -m pip install 'cryptography>=44,<48'
+      - name: Generate stable release signing key once
+        run: |
+          set -e
+          if [ -e .github/signing/atlas-release.p12.enc ]; then
+            echo "Signing vault already exists; refusing to replace its key."
+            exit 0
+          fi
+          keytool -genkeypair -noprompt -alias arrakis-atlas \
+            -keyalg RSA -keysize 3072 -validity 10000 \
+            -dname "CN=Arrakis Atlas, OU=Independent Android Project, O=Arrakis Atlas" \
+            -keystore "$RUNNER_TEMP/atlas-release.p12" -storetype PKCS12 \
+            -storepass "$ATLAS_SIGNING_PASSWORD" -keypass "$ATLAS_SIGNING_PASSWORD"
+          python tools/signing_vault.py encrypt "$RUNNER_TEMP/atlas-release.p12" .github/signing/atlas-release.p12.enc
+          python tools/signing_vault.py decrypt .github/signing/atlas-release.p12.enc "$RUNNER_TEMP/verify.p12"
+          sha256sum "$RUNNER_TEMP/atlas-release.p12" | cut -d' ' -f1 > "$RUNNER_TEMP/hash1"
+          sha256sum "$RUNNER_TEMP/verify.p12" | cut -d' ' -f1 > "$RUNNER_TEMP/hash2"
+          cmp "$RUNNER_TEMP/hash1" "$RUNNER_TEMP/hash2"
+          shred -u "$RUNNER_TEMP/atlas-release.p12" "$RUNNER_TEMP/verify.p12"
+      - name: Store only the encrypted signing vault in GitHub
+        run: |
+          if [ ! -f .github/signing/atlas-release.p12.enc ]; then
+            echo "Signing vault was not generated."
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/signing/atlas-release.p12.enc
+          git commit -m "Store encrypted permanent Android signing key"
+          git push origin HEAD:main
+          echo "Encrypted key committed. Actual private key remains encrypted in public repository."
