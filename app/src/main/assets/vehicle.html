@@ -6,8 +6,8 @@
 <div class="grid"><div><label for="purpose">Wofür brauchst du es?</label><select id="purpose"></select></div><div><label for="tier">Bauteilstufe</label><select id="tier"></select></div></div><p id="purposeHint" class="muted"></p></section>
 <div id="summary" aria-live="polite"></div>
 <details class="panelDetails" id="partsDisclosure"><summary>3. Bauteile und Zusatzmodule</summary><div class="panelContent"><p class="muted">Häkchen und Anzahl anpassen. Unter jedem Teil stehen die genauen Zutaten aus dem hinterlegten Rezept.</p><div id="parts"></div></div></details>
-<section><h2>3. Was hast du schon?</h2><p class="muted">Bauteile und Materialien im Lager werden von der Rechnung abgezogen.</p>
+<details class="panelDetails" id="stockDisclosure"><summary>4. Vorhandene Bauteile und Materialien</summary><div class="panelContent"><p class="muted">Bauteile und Materialien im Lager werden von der Rechnung abgezogen.</p>
 <label for="stockItem">Vorhandener Gegenstand</label><input id="stockItem" list="nameOptions" placeholder="Gegenstand suchen"><datalist id="nameOptions"></datalist>
-<div class="grid"><div><label for="stockQty">Anzahl</label><input id="stockQty" type="number" min="0" value="1"></div><div class="bottom"><button id="addStock">Bestand speichern</button></div></div><div id="stockList"></div></section>
+<div class="grid"><div><label for="stockQty">Anzahl</label><input id="stockQty" type="number" min="0" value="1"></div><div class="bottom"><button id="addStock">Bestand speichern</button></div></div><div id="stockList"></div></div></details>
 <section><h2>4. Gesamter Materialbedarf</h2><div id="results" aria-live="polite"></div><button class="primary" id="saveProject">Als Bauprojekt speichern</button><p id="saveMessage" class="muted" aria-live="polite"></p></section>
 <script src="items.js"></script><script src="extra.js"></script><script src="recipes.js"></script><script src="vehicle_specs.js"></script><script src="vehicle_calc.js"></script><script src="vehicle.js"></script><script src="vehicle_output.js"></script></body></html>
