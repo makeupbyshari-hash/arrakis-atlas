@@ -106,6 +106,20 @@ const terms=[
  {id:'merchant arkady',name:'Arkady Demidenko',aka:['Wanderhändler'],type:'trader'},
  {id:'merchant zoe',name:'Zoe',aka:['The Crossroads', 'Händlerin'],type:'trader'}
 ];
+// Händlerwaren automatisch in die deutsche Itemsuche aufnehmen. Nicht nur Beispiele!
+for(const vendor of Object.values(extra.vendors||{})){
+ for(const g of (vendor.goods||[])){
+  const id=String(g[1]||'').trim(),de=String(g[0]||'').trim();
+  if(!id||!de)continue;
+  let term=terms.find(t=>t.id===id);
+  if(term){
+   if(norm(term.name)!==norm(de)&&!term.aka.some(a=>norm(a)===norm(de)))term.aka.push(de);
+   if(!term.aka.some(a=>norm(a)===norm(id)))term.aka.push(id);
+  }else{
+   terms.push({id,name:de,aka:[id],type:'item'});
+  }
+ }
+}
 const spots=[
  {id:'sentinel',name:'Sentinel City · Truhen',region:'hagga',x:78,y:37,level:'best',kind:'farm',precision:'region',items:['industrial pump'],notes:'Mehrere Kisten in der Stadt; Truhen auch tiefer im Gebiet. Gut bewährte Farmrunde, aber starke Gegner.',source:'https://awakening.wiki/Industrial_Pump'},
  {id:'pump_fallen',name:'Abgestürzte Schiffe',region:'hagga',level:'alternative',kind:'farm',precision:'dynamic',items:['industrial pump'],notes:'Fallen Ships können Industriepumpen enthalten. Die konkreten Absturzstellen wechseln; daher bewusst kein erfundener Kartenpunkt.',source:'https://awakening.wiki/Industrial_Pump'},
@@ -121,6 +135,10 @@ const spots=[
  {id:'agave',name:'O’odham · Agaven-Region',region:'hagga',x:30,y:67,level:'possible',kind:'resource',precision:'region',items:['agave seeds'],notes:'Grobe Orientierung, kein genauer Pflanzenspawn.',source:'https://dune.gaming.tools/hagga-basin'},
  {id:'mysa_loot',name:'Mysa Tarill · Außenposten',region:'hagga',x:20,y:29,level:'alternative',kind:'farm',precision:'region',items:['carbide scraps','diamondine dust'],notes:'Gegner und Kisten im Gebiet; guter Vergleichsort, aber kein garantierter Drop. Die Pins sind nur ungefähre Regionshinweise.',source:'https://www.pcgamer.com/games/mmo/dune-awakening-diamondine-dust-locations/'},
  {id:'khidir_loot',name:'Hand of Khidir · Außenposten',region:'hagga',x:49,y:44,level:'alternative',kind:'farm',precision:'region',items:['carbide scraps','diamondine dust'],notes:'Außenposten mit Kisten und Gegnern in Jabal Eifrit Al-janub. Region statt exakter Kistenposition.',source:'https://www.pcgamer.com/games/mmo/dune-awakening-carbide-scraps-locations/'},
+ {id:'slag_sheol_wreck_area',name:'Sheol · Wrack- und Containergebiet',region:'hagga',x:13,y:82,level:'best',kind:'farm',precision:'region',items:['irradiated slag'],notes:'Region Sheol: verstrahlte Schlacke wird in den Beutekisten mehrerer Schiffswracks gefunden. Dies ist nur ein MARKIERTER SUCHBEREICH und weder ein Wrack-Eingang noch eine genaue Kistenposition. Strahlungsschutz und Jodtabletten mitnehmen.',source:'https://dune.gaming.tools/de/items/t5radiatedcorecomponent'},
+ {id:'slag_delphis',name:'Wrack der Delphis · viele Beutekisten',region:'hagga',level:'best',kind:'farm',precision:'unknown',items:['irradiated slag'],notes:'Großes Schiffswrack im Sheol-Gebiet. Enthält laut Farmguide zahlreiche Kisten mit verstrahlter Schlacke. Der genaue Eingang ist hier noch nicht kartiert.',source:'https://www.method.gg/dune-awakening/where-to-find-farm-irradiated-slag-in-dune-awakening'},
+ {id:'slag_ourea',name:'Wrack der Ourea · Beutekisten',region:'hagga',level:'alternative',kind:'farm',precision:'unknown',items:['irradiated slag'],notes:'Benanntes Wrack im Sheol mit Verstrahlter Schlacke als mögliche Beute. Keine ungeprüfte Eingangskoordinate anzeigen.',source:'https://patchcrazy.co.uk/how-to-get-irradiated-slag-resource-location-in-dune-awakening/'},
+ {id:'slag_fallen_ships',name:'Abgestürzte Schiffe · verstrahlte Schlacke',region:'hagga',level:'alternative',kind:'farm',precision:'dynamic',items:['irradiated slag'],notes:'Bei dynamischen Schiffsabstürzen lassen sich teils Kisten mit verstrahlter Schlacke finden; die Positionen wechseln. Nicht als dauerhaften Kartenpin anzeigen.',source:'https://dune.gaming.tools/de/items/t5radiatedcorecomponent'},
  {id:'deep_labs',name:'Imperiale Prüfstationen',region:'deep',level:'alternative',kind:'farm',precision:'dynamic',items:['advanced servoks','particle capacitors'],notes:'Prüfstationen (Ecology Labs) sind eine wichtige Quelle alter imperialer Komponenten. Einzelne Stationen wechseln je nach Kartenlayout.',source:'https://awakening.wiki/Testing_Stations'}
 ];
 for(const term of (extra.terms||[])){if(!terms.some(t=>t.id===term.id))terms.push(term);}

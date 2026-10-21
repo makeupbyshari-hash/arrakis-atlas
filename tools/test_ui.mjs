@@ -63,6 +63,21 @@ try{
  await page.locator('[data-mode="quests"]').click();
  assert.ok((await page.locator('#categoryPanel .choice').count())>=4,'Quest/contract board submenu missing');
  assert.equal(await page.locator('#pins .pin').count(),0);
+
+ await page.locator('#search').fill('Verstrahlte');
+ assert.ok((await page.locator('#suggestions .suggest').count())>0,'German Irradiated Slag suggestion missing');
+ await page.locator('#suggestions .suggest').filter({hasText:'Verstrahlte Schlacke'}).first().click();
+ assert.equal(await page.locator('#search').inputValue(),'Verstrahlte Schlacke','German selection not filled');
+ assert.ok((await page.locator('#spotList .spot').count())>=5,'Missing Sheol farm locations or merchant for irradiated slag');
+ assert.equal(await page.locator('#pins .pin').count(),2,'Sheol farm region and Arkady vendor pin expected');
+ await page.locator('[data-mode="traders"]').click();
+ await page.locator('#categoryPanel .choice').filter({hasText:'Arkady Demidenko'}).first().click();
+ const arkadyText=await page.locator('#details').innerText();
+ assert.ok(arkadyText.includes('Verstrahlte Schlacke'), 'Arkady stock missing irradiated slag');
+ assert.ok(arkadyText.includes('1.500 Solari'), 'Arkady slag price missing');
+ await page.locator('#details .offer[data-good="irradiated slag"]').click();
+ assert.equal(await page.locator('#search').inputValue(),'Verstrahlte Schlacke','Vendor-item link not localized');
+ assert.ok((await page.locator('#spotList .spot').count())>=5,'Vendor link must show all slag sources');
  await page.screenshot({path:join(root,'ui-checked.png')});
  assert.deepEqual(errs,[], 'JavaScript runtime errors: '+errs.join('; '));
  console.log('PASS: selected item filled, item-specific map, 3+ farming sources, detailed tile zoom, details, no JS exceptions');
