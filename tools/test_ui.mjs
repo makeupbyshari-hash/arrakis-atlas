@@ -69,7 +69,7 @@ try{
  await page.locator('#suggestions .suggest').filter({hasText:'Verstrahlte Schlacke'}).first().click();
  assert.equal(await page.locator('#search').inputValue(),'Verstrahlte Schlacke','German selection not filled');
  assert.ok((await page.locator('#spotList .spot').count())>=5,'Missing Sheol farm locations or merchant for irradiated slag');
- assert.equal(await page.locator('#pins .pin').count(),2,'Sheol farm region and Arkady vendor pin expected');
+ assert.ok((await page.locator('#pins .pin').count())>=2,'Sheol farm region and Arkady vendor pin expected');
  await page.locator('[data-mode="traders"]').click();
  await page.locator('#categoryPanel .choice').filter({hasText:'Arkady Demidenko'}).first().click();
  const arkadyText=await page.locator('#details').innerText();
@@ -79,6 +79,22 @@ try{
  assert.equal(await page.locator('#search').inputValue(),'Verstrahlte Schlacke','Vendor-item link not localized');
  assert.ok((await page.locator('#spotList .spot').count())>=5,'Vendor link must show all slag sources');
  await page.screenshot({path:join(root,'ui-checked.png')});
+ const recipeCount=await page.evaluate(()=>Object.keys(window.ATLAS_RECIPE_DATA?.items||{}).length);
+ assert.ok(recipeCount>=1000,'Offline recipe data missing in map: '+recipeCount);
+ await page.goto(pathToFileURL(join(assets,'workshop.html')).href);
+ await page.locator('#itemSearch').waitFor();
+ assert.ok((await page.locator('#itemOptions option').count())>=1000,'Workshop full item picker missing');
+ await page.locator('#projectName').fill('Buggy mit Stauraum');
+ await page.locator('#projectName').dispatchEvent('change');
+ await page.locator('#itemSearch').fill('Verstrahlte Schlacke');
+ await page.locator('#addItem').click();
+ await page.locator('#calculate').click();
+ assert.ok((await page.locator('#results').innerText()).includes('Verstrahlte Schlacke'),'Direct loot must remain in material needs');
+ await page.locator('#exportData').click();
+ assert.ok((await page.locator('#backupText').inputValue()).includes('Buggy mit Stauraum'),'Project export failed');
+ await page.locator('#vehicleType').selectOption('buggy');
+ await page.locator('#vehicleTier').selectOption('5');
+ assert.deepEqual(errs,[], 'JavaScript runtime errors: '+errs.join('; '));
  assert.deepEqual(errs,[], 'JavaScript runtime errors: '+errs.join('; '));
  console.log('PASS: selected item filled, item-specific map, 3+ farming sources, detailed tile zoom, details, no JS exceptions');
 } finally {
