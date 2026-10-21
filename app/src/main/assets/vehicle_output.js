@@ -4,10 +4,13 @@ const V=window.VP,{c,db,$,el,title,save}=V;
 function rows(object,root){
  const entries=Object.entries(object).filter(x=>Number(x[1])>0).sort((a,b)=>title(a[0]).localeCompare(title(b[0]),'de'));
  if(!entries.length){root.append(el('p','Keine'));return}
- for(const [id,qty] of entries){
+ entries.forEach(([id,qty],index)=>{
+   let parent=root;
+   if(index===8){const more=el('details');more.className='moreResults';more.append(el('summary','Weitere '+(entries.length-8)+' Positionen anzeigen'));root.append(more)}
+   if(index>=8)parent=root.querySelector('.moreResults');
    const div=el('div');div.className='line';
-   div.append(el('span',title(id)),el('b',Number(qty).toLocaleString('de-DE')+' ×'));root.append(div);
- }
+   div.append(el('span',title(id)),el('b',Number(qty).toLocaleString('de-DE')+' ×'));parent.append(div);
+ });
 }
 V.refresh=function(){
  const {v,tier}=V.choice(),parts=V.planned.filter(x=>x.enabled),result=c.calculate(parts,db.stock);
