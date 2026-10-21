@@ -32,6 +32,8 @@ public final class AtlasActivity extends Activity {
                 }
             });
             FrameLayout safeArea = new FrameLayout(this);
+            safeArea.setBackgroundColor(Color.rgb(14, 21, 25));
+            getWindow().getDecorView().setBackgroundColor(Color.rgb(14, 21, 25));
             safeArea.addView(map, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
             // Android 15+ enforces edge-to-edge. Keep the app's header and buttons
