@@ -5,13 +5,14 @@
 <section><h2>Mein Lager</h2><p class="muted">Vorhandene Gegenstände und bereits gebaute Komponenten werden automatisch abgezogen.</p><label>Gegenstand<input id="stockName" list="itemOptions"></label><div class="grid"><label>Anzahl<input type="number" min="0" id="stockAmount" value="1"></label><button id="saveStock">Bestand speichern</button></div><div id="stockList"></div></section>
 <section><h2>Rezeptdaten</h2><p class="muted">Ein fehlendes Rezept bedeutet nicht, dass der Gegenstand im Spiel nicht herstellbar ist. Bis ein Rezept geprüft wurde, kannst du es selbst hinterlegen. Keine erfundenen Materialmengen.</p><label>Gegenstand<input id="recipeName" list="itemOptions"></label><label>Benötigte Werkstatt / Maschine<input id="station" placeholder="Falls bekannt"></label><label>Materialien (eine Zeile je Zutat: Anzahl ; Name)</label><textarea id="ingredients" rows="5" placeholder="4 ; Beispielmaterial&#10;2 ; Beispielbauteil"></textarea><button id="saveRecipe">Rezept speichern</button><div id="recipeStatus" class="muted"></div></section>
 <section><h2>Gesamtberechnung</h2><button class="primary" id="calculate">Materialbedarf berechnen</button><div id="results" aria-live="polite"></div></section>
-<script src="items.js"></script><script src="extra.js"></script><script>
+<script src="items.js"></script><script src="extra.js"></script><script src="recipes.js"></script><script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id), key='arrakis-workshop-v1';
 const norm=s=>String(s||'').trim().toLocaleLowerCase('de-DE').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const items=Array.isArray(window.ARRAKIS_ITEMS)?window.ARRAKIS_ITEMS:[];
 const aliases=new Map();items.forEach(x=>{if(x.name)aliases.set(norm(x.name),x.name)});
 const extra=window.ATLAS_EXTRA||{};
+const knownRecipes=window.ATLAS_RECIPES||{};
 Object.values(extra.vendors||{}).forEach(v=>(v.goods||[]).forEach(g=>{if(g[0]&&g[1]){aliases.set(norm(g[1]),g[0]);aliases.set(norm(g[0]),g[0])}})); 
 let db;try{db=JSON.parse(localStorage.getItem(key))}catch(e){}if(!db||typeof db!=='object')db={projects:[],recipes:{},stock:{}};
 db.projects=Array.isArray(db.projects)?db.projects:[];db.recipes=db.recipes||{};db.stock=db.stock||{};
@@ -35,14 +36,14 @@ $('deleteProject').onclick=()=>{if(db.projects.length===1){alert('Mindestens ein
 $('projectName').onchange=e=>{project().name=e.target.value.trim()||'Mein Projekt';save();render()};
 $('addItem').onclick=()=>{const name=canonical($('itemSearch').value),qty=number($('amount').value);if(!name||!qty)return;const it=project().items.find(x=>norm(x.name)===norm(name));if(it)it.qty+=qty;else project().items.push({name,qty});$('itemSearch').value='';save();render()};
 $('saveStock').onclick=()=>{const name=canonical($('stockName').value);if(!name)return;db.stock[name]=number($('stockAmount').value);save();render()};
-$('recipeName').onchange=()=>{const r=db.recipes[canonical($('recipeName').value)];$('station').value=r?.station||'';$('ingredients').value=(r?.ingredients||[]).map(x=>x.qty+' ; '+x.name).join('\n')};
+$('recipeName').onchange=()=>{const r=db.recipes[canonical($('recipeName').value)]||knownRecipes[canonical($('recipeName').value)];$('station').value=r?.station||'';$('ingredients').value=(r?.ingredients||[]).map(x=>x.qty+' ; '+x.name).join('\n')};
 $('saveRecipe').onclick=()=>{const name=canonical($('recipeName').value);if(!name)return;const lines=$('ingredients').value.split(/\r?\n/).filter(x=>x.trim()),ingredients=[];for(const line of lines){const m=line.match(/^\s*(\d+)\s*;\s*(.+?)\s*$/);if(!m||!Number(m[1])){$('recipeStatus').textContent='Ungültige Zeile: '+line;return}ingredients.push({qty:number(m[1]),name:canonical(m[2])})}db.recipes[name]={station:$('station').value.trim(),ingredients,source:'Eigene Eingabe'};save();$('recipeStatus').textContent='Rezept lokal gespeichert: '+name};
 function calculate(){
  const needs={},stock={...db.stock},missing=new Set(),stations=new Set(),cycles=new Set(),consumed={};
  const expand=(name,qty,stack)=>{
   if(!qty)return;
   const have=number(stock[name]),used=Math.min(have,qty);stock[name]=have-used;if(used)consumed[name]=(consumed[name]||0)+used;qty-=used;if(!qty)return;
-  const recipe=db.recipes[name];
+  const recipe=db.recipes[name]||knownRecipes[name];
   if(!recipe){needs[name]=(needs[name]||0)+qty;missing.add(name);return}
   if(stack.includes(name)){cycles.add([...stack,name].join(' → '));return}
   if(recipe.station)stations.add(recipe.station);
