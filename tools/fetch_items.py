@@ -41,4 +41,14 @@ OUT.parent.mkdir(parents=True,exist_ok=True)
 OUT.write_text("window.ARRAKIS_ITEMS="+json.dumps(records,ensure_ascii=False,separators=(",",":"))+";\n",encoding="utf-8")
 print("OFFLINE ITEMS:",len(records),"OUTPUT BYTES",OUT.stat().st_size)
 
-# Audit: an item name is not evidence of a craftable recipe.\n# Do not silently fabricate crafting ingredients from descriptions or tags.\naudit={"catalog_items":len(records),"verified_crafting_recipes":0,"recipe_coverage":"not_available_in_items_endpoint","source":BASE}\npathlib.Path("app/src/main/assets/catalog-audit.json").write_text(json.dumps(audit,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")\n
+# Audit: names and descriptions are not verified crafting recipes.
+audit = {
+    "catalog_items": len(records),
+    "verified_crafting_recipes": 0,
+    "recipe_coverage": "not_available_in_items_endpoint",
+    "source": BASE,
+}
+pathlib.Path("app/src/main/assets/catalog-audit.json").write_text(
+    json.dumps(audit, ensure_ascii=False, indent=2) + "\n",
+    encoding="utf-8",
+)
