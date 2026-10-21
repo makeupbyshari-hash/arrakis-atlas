@@ -48,7 +48,7 @@ function draw(){
      for(const ing of c.recipes[p.id].ingredients)ul.append(el('li',Number(ing.qty).toLocaleString('de-DE')+' × '+title(ing.id)));
      d.append(ul);
      const stations=c.recipes[p.id].station||[];
-     const station=el('div','Werkstatt: '+(stations.length?stations.join(', '):'in der Datenquelle nicht angegeben'));station.className='muted';d.append(station);card.append(d);
+     const station=el('div','Werkstatt: '+(stations.length?stations.join(', '):(Number(choice().tier)>=6?'Fortschrittlicher Fahrzeugfabrikator':'Fahrzeugfabrikator')+' (Fahrzeugdatenbank; Sonderteile können abweichen)'));station.className='muted';d.append(station);card.append(d);
    }else{const pmsg=el('p','Für dieses Bauteil ist kein überprüftes Rezept hinterlegt.');pmsg.className='muted warning';card.append(pmsg)}
    root.append(card);
  }
