@@ -11,8 +11,19 @@ android {
         versionCode 11
         versionName '1.0.10'
     }
+    signingConfigs {
+        atlasRelease {
+            storeFile file(System.getenv('ATLAS_KEYSTORE_FILE') ?: "${rootDir}/missing-signing-key.p12")
+            storePassword System.getenv('ATLAS_SIGNING_PASSWORD') ?: ''
+            keyAlias 'arrakis-atlas'
+            keyPassword System.getenv('ATLAS_SIGNING_PASSWORD') ?: ''
+        }
+    }
     buildTypes {
-        release { minifyEnabled false }
+        release {
+            signingConfig signingConfigs.atlasRelease
+            minifyEnabled false
+        }
         debug { minifyEnabled false }
     }
     compileOptions {
