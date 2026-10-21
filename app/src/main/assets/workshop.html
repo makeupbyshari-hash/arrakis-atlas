@@ -61,7 +61,7 @@ function calculate(){
  if(cycles.size){heading('Rezeptkreislauf erkannt');list([...cycles])}
 }
 $('calculate').onclick=calculate;
-const data=$('itemOptions');items.slice(0,6000).forEach(x=>{if(x.name){const o=document.createElement('option');o.value=x.name;data.append(o)}});
+const data=$('itemOptions');const names=new Set(items.map(x=>canonical(x.name)).filter(Boolean));Object.values(extra.vendors||{}).forEach(v=>(v.goods||[]).forEach(g=>{if(g[0])names.add(g[0])}));[...names].sort((a,b)=>a.localeCompare(b,'de')).forEach(name=>{const o=document.createElement('option');o.value=name;data.append(o)});
 render();calculate();
 })();
 </script></body></html>
