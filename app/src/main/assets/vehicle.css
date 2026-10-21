@@ -1,0 +1,22 @@
+:root{color-scheme:dark;--bg:#111b22;--panel:#1c2b34;--line:#4a6470;--gold:#f2cf96;--ink:#f5f1e7;--muted:#cbd7d9}
+*{box-sizing:border-box}html{background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,Roboto,Arial,sans-serif}
+body{max-width:900px;margin:0 auto;padding:15px 13px 38px}h1{font-size:24px;color:var(--gold);margin:12px 0 4px}
+h2{font-size:19px;color:var(--gold);margin:0 0 10px}h3{font-size:16px;margin:15px 0 7px}
+p{margin:7px 0 12px}nav{display:flex;justify-content:space-between;align-items:center;gap:9px}
+nav a{color:var(--gold);text-decoration:none;padding:10px 3px}section{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:15px;margin:15px 0}
+label{display:block;margin:12px 0 6px}.muted{font-size:13px;color:var(--muted)}
+select,input,button{font:inherit;min-height:44px;border-radius:9px;border:1px solid #78919c;background:#13232c;color:var(--ink);padding:9px 12px;max-width:100%}
+select,input[type=number],#stockItem{width:100%}input[type=checkbox]{width:23px;height:23px;min-height:23px;accent-color:#e8c58a}
+button{cursor:pointer}button.primary{background:#66512e;color:#fff4d6;border-color:#e9cd90;font-weight:700}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #ffdfa3;outline-offset:2px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.bottom{align-self:end}
+.part{border:1px solid #4c6470;border-radius:10px;padding:10px;margin:8px 0;background:#263b46}
+.parthead{display:flex;align-items:center;gap:10px}.parthead strong{flex:1;font-size:15px}
+.parthead input[type=number]{width:73px}.part details{padding-left:33px;margin-top:6px}
+.part summary{color:var(--gold);cursor:pointer;padding:5px 0}ul{margin:6px 0;padding-left:23px}
+.line{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #43555d;padding:7px 0}
+.line b{white-space:nowrap}.columns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.results{background:#122129;padding:12px;border-radius:10px}
+#summary{position:sticky;top:0;z-index:3;background:#14262bf3;border:1px solid #aa8756;border-radius:10px;padding:10px 12px;margin-top:10px}
+.warning{color:#f4d29b}#parts:empty:after{content:'Für diese Auswahl gibt es noch keine dokumentierten Bauteile.'}
+@media(max-width:550px){.columns,.grid{grid-template-columns:1fr}h1{font-size:22px}}
