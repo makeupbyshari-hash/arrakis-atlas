@@ -316,7 +316,11 @@ function render(){
   selectionBar.innerHTML='<b>'+esc(title)+'</b><small>'+withPin+' ungefähr markierte Orte · '+Math.max(0,matches.length-withPin)+' weitere Quellen ohne festen Pin'+(elsewhere?' · '+elsewhere+' in anderer Karte':'')+'</small><div class="legend"><span class="dot gold"></span>Gute Farmrunde<span class="dot blue"></span>Weitere Quelle<span class="dot gray"></span>Dynamisch / unsicher</div>';
   spotList.replaceChildren();
   if(!matches.length && !mode){
-   let p=document.createElement('div');p.style.padding='11px';p.textContent='Dieser Gegenstand ist im Katalog bekannt, aber konkrete Fundorte sind noch nicht überprüft.';spotList.appendChild(p);
+   let p=document.createElement('div');p.style.padding='11px';
+   const name=norm(selected&&selected.name),vehicle=name.startsWith('buggy')?'buggy':name.startsWith('sandbike')?'sandbike':name.startsWith('scoutthopter')?'scout':name.startsWith('kampfthopter')?'combat':name.startsWith('frachtthopter')?'carrier':null;
+   p.textContent=vehicle?'Für Fahrzeugbauteile zeigt die Karte keine Herstellungszutaten. Verwende dafür die Fahrzeug-Konfiguration.':'Für diesen Gegenstand sind derzeit keine konkreten Fundorte erfasst.';
+   spotList.appendChild(p);
+   if(vehicle){const b=document.createElement('button');b.className='choice';b.type='button';b.style.width='100%';b.style.padding='12px';b.style.minHeight='48px';b.textContent='Fahrzeug konfigurieren und Materialien berechnen →';b.onclick=()=>{window.location.href='vehicle.html?vehicle='+vehicle};spotList.appendChild(b);}
   }
   if(mode && !selectedLocation){spotList.hidden=true;selectionBar.innerHTML='<b>'+esc(title)+'</b><small>Wähle oben einen Eintrag im Untermenü.</small>';}
   for(const s of matches){
