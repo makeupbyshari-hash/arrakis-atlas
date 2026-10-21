@@ -1,0 +1,10 @@
+# Never commit a private signing keystore or temporary decryptions
+*.keystore
+*.jks
+*.p12
+*.key
+*.pem
+!*.p12.enc
+.local-signing/
+app/build/
+.gradle/
