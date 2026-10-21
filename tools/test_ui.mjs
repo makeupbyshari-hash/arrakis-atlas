@@ -94,6 +94,14 @@ try{
  assert.ok((await page.locator('#backupText').inputValue()).includes('Buggy mit Stauraum'),'Project export failed');
  await page.locator('#vehicleType').selectOption('buggy');
  await page.locator('#vehicleTier').selectOption('5');
+ await page.locator('#newProject').click();
+ await page.locator('#presetCarrier').click();
+ assert.ok((await page.locator('#projectItems').innerText()).includes('Frachtthopter, Flügel Typ 6 × 8'),'Carrier must include eight wings');
+ assert.ok((await page.locator('#projectItems').innerText()).includes('Frachtthopter, Seitenpanzerung Typ 6 × 2'),'Carrier must include both side hulls');
+ assert.ok((await page.locator('#projectItems').innerText()).includes('Frachtthopter, Heckpanzerung Typ 6 × 2'),'Carrier must include both tail hulls');
+ assert.ok(!(await page.locator('#presetStatus').innerText()).includes('nicht zugeordneten'),'Carrier recipes should all be connected');
+ await page.locator('#calculate').click();
+ assert.ok((await page.locator('#results').innerText()).includes('Herzustellen'),'Full carrier crafting calculation missing');
  assert.deepEqual(errs,[], 'JavaScript runtime errors: '+errs.join('; '));
  assert.deepEqual(errs,[], 'JavaScript runtime errors: '+errs.join('; '));
  console.log('PASS: selected item filled, item-specific map, 3+ farming sources, detailed tile zoom, details, no JS exceptions');
