@@ -257,7 +257,9 @@ function itemByText(s){let n=norm(s);return terms.find(t=>t.id===n||norm(t.name)
 function matchesTerm(t,q){let n=norm(q);return norm(t.name).includes(n)||norm(t.id).includes(n)||t.aka.some(a=>norm(a).includes(n));}
 function getSuggestions(q){
  let n=norm(q);if(!n)return[];
- const known=terms.filter(t=>matchesTerm(t,n)).slice(0,15);
+ const known=terms.filter(t=>matchesTerm(t,n)).slice(0,14);
+ const vehicle=n.startsWith('buggy')?'buggy':n.startsWith('sandbike')?'sandbike':n.startsWith('scoutthopter')?'scout':n.startsWith('kampfthopter')?'combat':n.startsWith('frachtthopter')||n.startsWith('frachter')?'carrier':null;
+ if(vehicle)known.unshift({id:'vehicle-builder-'+vehicle,name:'Fahrzeugbau: '+(vehicle==='buggy'?'Buggy':vehicle==='carrier'?'Frachtthopter':vehicle==='sandbike'?'Sandbike':vehicle==='scout'?'Scoutthopter':'Kampfthopter')+' konfigurieren',aka:[],type:'vehicle',vehicle});
  const used=new Set(known.map(t=>t.id));
  for(const rec of catalog){
   if(known.length>=13)break;
@@ -278,13 +280,14 @@ function showSuggestions(){
  else for(const t of opts){
   let b=document.createElement('button');b.type='button';b.className='suggest';b.setAttribute('role','option');
   let a=document.createElement('b');a.textContent=t.name;
-  let sm=document.createElement('small');sm.textContent=t.type==='trader'?'Händler anzeigen':'Gegenstand auswählen und nur seine Fundorte anzeigen';
+  let sm=document.createElement('small');sm.textContent=t.type==='vehicle'?'Einsatzzweck auswählen · Bauteile und Herstellungszutaten berechnen':t.type==='trader'?'Händler anzeigen':'Gegenstand auswählen und nur seine Fundorte anzeigen';
   b.append(a,sm);b.onclick=()=>selectTerm(t);
   suggestions.appendChild(b);
  }
  suggestions.hidden=false;
 }
 function selectTerm(t){
+ if(t.type==='vehicle'&&t.vehicle){window.location.href='vehicle.html?vehicle='+encodeURIComponent(t.vehicle);return;}
  selected=t;selectedLocation=null;mode=null;setModeButtons();search.value=t.name;hideSuggestions();hideDetails();categoryPanel.hidden=true;search.blur();render();fit();
 }
 function setModeButtons(){document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));}
