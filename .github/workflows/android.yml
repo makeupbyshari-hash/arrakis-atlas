@@ -44,6 +44,15 @@ jobs:
           Path('/tmp/atlas.js').write_text(m.group(1))
           PY
           node --check /tmp/atlas.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('app/src/main/assets/workshop.html').read_text()
+          m=re.search(r'<script>(.*?)</script>',s,re.S)
+          assert m, 'Missing workshop script'
+          Path('/tmp/atlas-workshop.js').write_text(m.group(1))
+          PY
+          node --check /tmp/atlas-workshop.js
           node --check app/src/main/assets/items.js
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
