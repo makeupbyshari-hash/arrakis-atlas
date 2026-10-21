@@ -27,7 +27,8 @@ while page<=70:
             "name":name.strip(),
             "desc":(item.get("short_description") or "").strip()[:280],
             "tags":tags[:230],
-            "added":item.get("added") or ""
+            "added":item.get("added") or "",
+            "recipe_status":"unverified"
         })
     print("page",page,"fetched",len(new),"total",len(records),flush=True)
     pageinfo=payload.get("pageInfo",{})
@@ -39,3 +40,5 @@ if len(records)<1500 or (expected and len(records)<expected-20): raise RuntimeEr
 OUT.parent.mkdir(parents=True,exist_ok=True)
 OUT.write_text("window.ARRAKIS_ITEMS="+json.dumps(records,ensure_ascii=False,separators=(",",":"))+";\n",encoding="utf-8")
 print("OFFLINE ITEMS:",len(records),"OUTPUT BYTES",OUT.stat().st_size)
+
+# Audit: an item name is not evidence of a craftable recipe.\n# Do not silently fabricate crafting ingredients from descriptions or tags.\naudit={"catalog_items":len(records),"verified_crafting_recipes":0,"recipe_coverage":"not_available_in_items_endpoint","source":BASE}\npathlib.Path("app/src/main/assets/catalog-audit.json").write_text(json.dumps(audit,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")\n
