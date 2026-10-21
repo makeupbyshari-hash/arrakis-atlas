@@ -105,10 +105,10 @@ jobs:
           script: |
             adb install -r app/build/outputs/apk/debug/app-debug.apk
             adb logcat -c
-            adb shell am start -W -n com.arrakis.atlas/.AtlasActivity
+            adb shell am start -W -n com.arrakis.atlas.beta13/com.arrakis.atlas.AtlasActivity
             sleep 15
-            adb shell pidof com.arrakis.atlas
-            ! adb logcat -d -s AndroidRuntime:E | grep -E 'FATAL EXCEPTION|com.arrakis.atlas'
+            adb shell pidof com.arrakis.atlas.beta13
+            ! adb logcat -d -s AndroidRuntime:E | grep -E 'FATAL EXCEPTION|com.arrakis.atlas.beta13'
             adb shell screencap -p /sdcard/atlas-smoke.png
             adb pull /sdcard/atlas-smoke.png atlas-smoke.png
             adb shell input tap 105 112 || true
