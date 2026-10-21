@@ -39,15 +39,15 @@ $('saveStock').onclick=()=>{const name=canonical($('stockName').value);if(!name)
 $('recipeName').onchange=()=>{const r=db.recipes[canonical($('recipeName').value)]||knownRecipes[canonical($('recipeName').value)];$('station').value=r?.station||'';$('ingredients').value=(r?.ingredients||[]).map(x=>x.qty+' ; '+x.name).join('\n')};
 $('saveRecipe').onclick=()=>{const name=canonical($('recipeName').value);if(!name)return;const lines=$('ingredients').value.split(/\r?\n/).filter(x=>x.trim()),ingredients=[];for(const line of lines){const m=line.match(/^\s*(\d+)\s*;\s*(.+?)\s*$/);if(!m||!Number(m[1])){$('recipeStatus').textContent='Ungültige Zeile: '+line;return}ingredients.push({qty:number(m[1]),name:canonical(m[2])})}db.recipes[name]={station:$('station').value.trim(),ingredients,source:'Eigene Eingabe'};save();$('recipeStatus').textContent='Rezept lokal gespeichert: '+name};
 function calculate(){
- const needs={},stock={...db.stock},missing=new Set(),stations=new Set(),cycles=new Set(),consumed={};
+ const needs={},stock={...db.stock},unknown=new Set(),stations=new Set(),cycles=new Set(),consumed={};
  const expand=(name,qty,stack)=>{
   if(!qty)return;
   const have=number(stock[name]),used=Math.min(have,qty);stock[name]=have-used;if(used)consumed[name]=(consumed[name]||0)+used;qty-=used;if(!qty)return;
   const recipe=db.recipes[name]||knownRecipes[name];
-  if(!recipe){needs[name]=(needs[name]||0)+qty;missing.add(name);return}
+  if(!recipe){needs[name]=(needs[name]||0)+qty;unknown.add(name);return}
   if(stack.includes(name)){cycles.add([...stack,name].join(' → '));return}
   if(recipe.station)stations.add(recipe.station);
-  if(!recipe.ingredients.length){needs[name]=(needs[name]||0)+qty;missing.add(name);return}
+  if(!recipe.ingredients.length){needs[name]=(needs[name]||0)+qty;unknown.add(name);return}
   recipe.ingredients.forEach(ing=>expand(ing.name,ing.qty*qty,[...stack,name]));
  };
  project().items.forEach(x=>expand(x.name,x.qty,[]));
@@ -57,7 +57,7 @@ function calculate(){
  heading('Noch zu beschaffen / herzustellen');list(Object.entries(needs).sort().map(([n,q])=>q+' × '+n).length?Object.entries(needs).sort().map(([n,q])=>q+' × '+n):['Kein offener Bedarf laut erfassten Rezepten']);
  heading('Aus dem Lager abgezogen');list(Object.entries(consumed).sort().map(([n,q])=>q+' × '+n).length?Object.entries(consumed).sort().map(([n,q])=>q+' × '+n):['Keine Lagerbestände angerechnet']);
  heading('Erforderliche Werkstätten');list([...stations].sort().length?[...stations].sort():['Noch keine Werkstätten hinterlegt']);
- if(missing.size){heading('Unvollständige Rezeptdaten');const p=elt('p','Für diese Gegenstände fehlen geprüfte Zutaten. Die Gesamtsumme ist deshalb noch nicht vollständig:');p.className='warn';out.append(p);list([...missing].sort())}
+ if(unknown.size){heading('Direkt beschaffen oder Rezept noch nicht erfasst');const p=elt('p','Diese Gegenstände werden als eigenständiger Bedarf gezählt. Sie können Rohstoffe, Beute, Händlerware oder Gegenstände mit noch unbekanntem Rezept sein. Nicht jeder Gegenstand ist herstellbar.');p.className='warn';out.append(p);list([...unknown].sort())}
  if(cycles.size){heading('Rezeptkreislauf erkannt');list([...cycles])}
 }
 $('calculate').onclick=calculate;
