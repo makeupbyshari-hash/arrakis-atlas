@@ -32,14 +32,14 @@ jobs:
           mkdir -p out
           gh run download "$RUN_ID" -R "$REPO" --name Arrakis-Atlas-APK-and-test -D out
           test -s out/app/build/outputs/apk/debug/app-debug.apk
-          cp out/app/build/outputs/apk/debug/app-debug.apk Arrakis_Atlas_2026_v1.0.13.apk
+          cp out/app/build/outputs/apk/debug/app-debug.apk Arrakis_Atlas_2026_v1.0.14.apk
       - name: Publish beta APK as directly downloadable release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
         run: |
-          if gh release view v1.0.13 -R "$REPO" >/dev/null 2>&1; then
-            gh release upload v1.0.13 Arrakis_Atlas_2026_v1.0.13.apk -R "$REPO" --clobber
+          if gh release view v1.0.14 -R "$REPO" >/dev/null 2>&1; then
+            gh release upload v1.0.14 Arrakis_Atlas_2026_v1.0.14.apk -R "$REPO" --clobber
           else
-            gh release create v1.0.13 Arrakis_Atlas_2026_v1.0.13.apk -R "$REPO" --title "Arrakis Atlas 1.0.13 (Beta)" --prerelease --notes "Interaktiver Offline-Atlas und Materialrechner mit 1414 datenbasierten Rezepten, deutschen Originalnamen soweit belegt, Lagerabzug, Fahrzeug-Konfiguration, Projektvergleich und Datensicherung. Radioaktive Schlacke, Händler, Taxi, Quests und Gefahrenhinweise. Separate installierbare App-Version ohne Updatesignatur-Konflikt. Android-Emulator-Test im Workflow."
+            gh release create v1.0.14 Arrakis_Atlas_2026_v1.0.14.apk -R "$REPO" --title "Arrakis Atlas 1.0.14 (Beta)" --prerelease --notes "Fahrzeugplaner mit auswählbarem Zweck: Buggy zum Abbau, Transport oder beidem, Sandbike, Scout- und Kampfthopter sowie Frachtthopter für Fahrzeugtransport. Deutsche Spielnamen, Zutaten je Bauteil, Material-Gesamtsumme und Lagerabzug. Direkte Navigation aus der Karte. Test im Android-Emulator und Browser. Separate installierbare APK."
           fi
