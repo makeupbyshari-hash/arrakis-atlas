@@ -71,7 +71,7 @@ footer{background:#172630;color:#b3c7ce;padding:6px 11px;font-size:11px;line-hei
 <div id="app">
 <header><div class="brand">◇ ARRAKIS ATLAS<small>Interaktive Dune-Karte · Oktober 2026</small></div><div class="privacy">Ruhige Ansicht<br><small>Offline · ohne Konto</small></div></header>
 <div class="tools"><div class="searchbox"><input id="search" type="search" enterkeyhint="search" autocomplete="off" spellcheck="false" aria-label="Gegenstand oder Händler suchen" placeholder="Item, Händler, Ort ..."><button id="clearSearch" aria-label="Suche leeren">×</button></div><select id="region" aria-label="Karte wählen"><option value="hagga">Hagga</option><option value="deep">Tiefe Wüste</option></select></div>
-<div class="filters"><a href="workshop.html" style="white-space:nowrap;display:flex;align-items:center;padding:8px 13px;background:#65502e;color:#ffebc3;border:1px solid #f1cc8f;border-radius:20px;text-decoration:none;font-weight:700">Werkstatt &amp; Rechner</a><button data-mode="farms">Farmspots</button><button data-mode="resources">Erzgebiete</button><button data-mode="traders">Händler</button><button data-mode="taxis">Taxis</button><button data-mode="quests">Quests</button><button data-mode="places">Orte</button><button id="clearAll">Alles aus</button></div>
+<div class="filters"><a href="workshop.html" style="white-space:nowrap;display:flex;align-items:center;padding:8px 13px;background:#65502e;color:#ffebc3;border:1px solid #f1cc8f;border-radius:20px;text-decoration:none;font-weight:700">Werkstatt &amp; Rechner</a><button data-mode="farms">Farmspots</button><button data-mode="resources">Erzgebiete</button><button data-mode="traders">Händler</button><button data-mode="taxis">Taxis</button><button data-mode="quests">Quests</button><button data-mode="places">Orte</button><button data-mode="hazards">Gefahren &amp; Schutz</button><button id="clearAll">Alles aus</button></div>
 <div id="categoryPanel" aria-live="polite" hidden></div>
 <div id="suggestions" role="listbox" aria-label="Suchvorschläge" hidden></div>
 <div id="mapframe"><div id="world"><div id="tilelayer"></div></div><div id="pins"></div><div id="mapHint">2 Finger = Zoom · 1 Finger = Verschieben</div><div class="zoom"><button id="plus" aria-label="Vergrößern">+</button><button id="minus" aria-label="Verkleinern">−</button><button id="reset" aria-label="Ganze Karte anzeigen">⌂</button></div><div id="details" hidden></div></div>
@@ -80,6 +80,7 @@ footer{background:#172630;color:#b3c7ce;padding:6px 11px;font-size:11px;line-hei
 </div>
 <script src="items.js"></script>
 <script src="extra.js"></script>
+<script src="recipes.js"></script>
 <script>
 (function(){
 'use strict';
@@ -90,6 +91,7 @@ const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u03
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 const catalog=Array.isArray(window.ARRAKIS_ITEMS)?window.ARRAKIS_ITEMS:[];
 const extra=window.ATLAS_EXTRA||{terms:[],locations:[],vendors:{}};
+const recipeDb=window.ATLAS_RECIPE_DATA||{items:{},names:{},germanIds:[]};
 const categoryPanel=$('categoryPanel');
 const terms=[
  {id:'industrial pump',name:'Industriepumpe',aka:['Industrial Pump','Industriepumpen'],type:'item'},
@@ -142,6 +144,13 @@ const spots=[
  {id:'deep_labs',name:'Imperiale Prüfstationen',region:'deep',level:'alternative',kind:'farm',precision:'dynamic',items:['advanced servoks','particle capacitors'],notes:'Prüfstationen (Ecology Labs) sind eine wichtige Quelle alter imperialer Komponenten. Einzelne Stationen wechseln je nach Kartenlayout.',source:'https://awakening.wiki/Testing_Stations'}
 ];
 for(const term of (extra.terms||[])){if(!terms.some(t=>t.id===term.id))terms.push(term);}
+// Verified German names from the game's localized item database: keep English IDs searchable.
+for(const id of recipeDb.germanIds||[]){
+ const name=recipeDb.names&&recipeDb.names[id];if(!name||terms.some(t=>t.id===id||norm(t.name)===norm(name)))continue;
+ terms.push({id,name,aka:[id],type:'item'});
+}
+spots.push({id:'hazard_sheol',name:'Sheol · Strahlungsgefahr',region:'hagga',x:13,y:85,level:'possible',kind:'hazard',precision:'region',items:['hazard radiation','irradiated slag'],notes:'Verstrahltes Gebiet: Strahlenanzug mit ausreichender Strahlungsmilderung verwenden; Jodtabletten sind bei Strahlenbelastung nützlich. Strahlenanzug Typ 5 ist als Schutzkleidung dokumentiert. Das markierte Gebiet ist nur eine grobe Orientierung, kein sicherer Wegpunkt.',source:'https://dune.gaming.tools/de/items/radiation_suit_t5'});
+spots.push({id:'hazard_worms',name:'Offene Wüste · Sandwurmgefahr',region:'deep',level:'possible',kind:'hazard',precision:'dynamic',items:['hazard worms'],notes:'Außerhalb geschützter Felsregionen mit Sandwürmern rechnen. Die Bedrohung ist mobil und kann nicht seriös mit einer dauerhaften Kartenkoordinate markiert werden. Auf sichere Lande- und Fluchtrouten achten.',source:'https://awakening.wiki/Sandworms'});
 for(const loc of (extra.locations||[])){
  if(loc.merge){const found=spots.find(s=>s.id===loc.merge);if(found)Object.assign(found,{vendor:loc.vendor});}
  else spots.push(loc);
@@ -206,7 +215,7 @@ function hideSuggestions(){suggestions.hidden=true;suggestions.replaceChildren()
 function renderCategory(){
  categoryPanel.replaceChildren();
  if(!mode){categoryPanel.hidden=true;return;}
- let title={traders:'Händler auswählen',resources:'Erz oder Rohstoff auswählen',farms:'Farmgegenstand auswählen',taxis:'Taxi / Schnellreise auswählen',quests:'Auftragstafel oder Questgeber auswählen',places:'Interessanten Ort auswählen'}[mode]||'Auswählen';
+ let title={traders:'Händler auswählen',resources:'Erz oder Rohstoff auswählen',farms:'Farmgegenstand auswählen',taxis:'Taxi / Schnellreise auswählen',quests:'Auftragstafel oder Questgeber auswählen',places:'Interessanten Ort auswählen',hazards:'Gefahr und empfohlene Ausrüstung auswählen'}[mode]||'Auswählen';
  let heading=document.createElement('h2');heading.textContent=title;categoryPanel.appendChild(heading);
  const text=document.createElement('div');text.className='hintText';text.textContent='Erst auswählen, dann werden nur die dazugehörigen Orte auf der Karte hervorgehoben.';categoryPanel.appendChild(text);
  let chosen=[];
@@ -214,6 +223,7 @@ function renderCategory(){
  else if(mode==='taxis')chosen=spots.filter(s=>s.kind==='taxi');
  else if(mode==='quests')chosen=spots.filter(s=>s.kind==='quest');
  else if(mode==='places')chosen=spots.filter(s=>s.kind==='farm'||s.kind==='resource');
+ else if(mode==='hazards')chosen=spots.filter(s=>s.kind==='hazard');
  else {
   const allowed=spots.filter(s=>mode==='farms'?s.kind==='farm':s.kind==='resource');
   const ids=new Set(allowed.flatMap(s=>s.items));
@@ -299,7 +309,7 @@ function render(){
  const elsewhere=matches.length-visible.length;
  if(selected||selectedLocation||mode){
   selectionBar.hidden=false;spotList.hidden=false;
-  const title=selectedLocation?selectedLocation.name:selected?selected.name:({'farms':'Farmspots','resources':'Erzgebiete','traders':'Händler','taxis':'Taxis','quests':'Quests','places':'Orte'})[mode];
+  const title=selectedLocation?selectedLocation.name:selected?selected.name:({'farms':'Farmspots','resources':'Erzgebiete','traders':'Händler','taxis':'Taxis','quests':'Quests','places':'Orte','hazards':'Gefahren & Schutz'})[mode];
   selectionBar.innerHTML='<b>'+esc(title)+'</b><small>'+withPin+' ungefähr markierte Orte · '+Math.max(0,matches.length-withPin)+' weitere Quellen ohne festen Pin'+(elsewhere?' · '+elsewhere+' in anderer Karte':'')+'</small><div class="legend"><span class="dot gold"></span>Gute Farmrunde<span class="dot blue"></span>Weitere Quelle<span class="dot gray"></span>Dynamisch / unsicher</div>';
   spotList.replaceChildren();
   if(!matches.length && !mode){
@@ -382,5 +392,8 @@ frame.addEventListener('dblclick',e=>{const rect=frame.getBoundingClientRect();z
 window.addEventListener('resize',()=>fit());
 if(window.visualViewport)window.visualViewport.addEventListener('resize',()=>fit());
 fit();render();renderCategory();
+// Incoming offline link from the crafting calculator.
+const requested=new URLSearchParams(window.location.search).get('item');
+if(requested){const choices=getSuggestions(requested);if(choices.length)selectTerm(choices[0]);else{search.value=requested;showSuggestions();}}
 })();
 </script></body></html>
