@@ -16,6 +16,7 @@ try{
  assert.equal(await page.locator('#purpose').inputValue(),'both');
  assert.equal(await page.locator('#tier').inputValue(),'5');
  assert.equal(await page.locator('#partsDisclosure').getAttribute('open'),null,'Parts should start collapsed to reduce clutter');
+ await page.screenshot({path:join(root,'vehicle-overview.png'),fullPage:true});
  assert.ok(await page.locator('#results').isVisible(),'Material summary must be immediately accessible');
  await page.locator('#partsDisclosure summary').click();
  const parts=await page.locator('#parts').innerText();
