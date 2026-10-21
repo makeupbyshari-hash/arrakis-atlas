@@ -4,7 +4,7 @@
 <section><h2>Projekt</h2><label for="projects">Gespeicherte Projekte</label><select id="projects"></select><div class="grid"><button id="newProject">Neues Projekt</button><button id="deleteProject">Projekt löschen</button></div><label for="projectName">Projektname</label><input id="projectName" placeholder="z. B. Buggy mit Cutter und Stauraum"><label for="itemSearch">Bauteil oder Gegenstand suchen</label><input id="itemSearch" list="itemOptions" placeholder="Deutscher oder englischer Name"><datalist id="itemOptions"></datalist><div class="grid"><label>Menge<input type="number" min="1" max="99999" id="amount" value="1"></label><button class="primary" id="addItem">Zum Projekt hinzufügen</button></div><div id="projectItems"></div></section>
 <section><h2>Mein Lager</h2><p class="muted">Vorhandene Gegenstände und bereits gebaute Komponenten werden automatisch abgezogen.</p><label>Gegenstand<input id="stockName" list="itemOptions"></label><div class="grid"><label>Anzahl<input type="number" min="0" id="stockAmount" value="1"></label><button id="saveStock">Bestand speichern</button></div><div id="stockList"></div></section>
 <section><h2>Rezeptdaten</h2><p class="muted">Ein fehlendes Rezept bedeutet nicht, dass der Gegenstand im Spiel nicht herstellbar ist. Bis ein Rezept geprüft wurde, kannst du es selbst hinterlegen. Keine erfundenen Materialmengen.</p><label>Gegenstand<input id="recipeName" list="itemOptions"></label><label>Benötigte Werkstatt / Maschine<input id="station" placeholder="Falls bekannt"></label><label>Materialien (eine Zeile je Zutat: Anzahl ; Name)</label><textarea id="ingredients" rows="5" placeholder="4 ; Beispielmaterial&#10;2 ; Beispielbauteil"></textarea><button id="saveRecipe">Rezept speichern</button><div id="recipeStatus" class="muted"></div></section>
-<section><h2>Fahrzeug-Konfiguration</h2><p class="muted">Wähle die tatsächlich benötigten Fahrzeugteile und Zusatzmodule für dein Projekt. Cutter und Stauraum können einzeln ausgewählt werden.</p><div class="grid"><label>Fahrzeug<select id="vehicleType"><option value="buggy">Buggy</option><option value="sandbike">Sandbike</option><option value="ornithopter">Ornithopter</option><option value="carrier">Frachtthopter</option></select></label><label>Stufe<select id="vehicleTier"><option value="3">Typ 3</option><option value="4">Typ 4</option><option value="5" selected>Typ 5</option><option value="6">Typ 6</option></select></label></div><div id="vehicleParts"></div><button id="addVehicle">Ausgewählte Teile übernehmen</button></section>
+<section><h2>Fahrzeug-Konfiguration</h2><p class="muted">Wähle die tatsächlich benötigten Fahrzeugteile und Zusatzmodule für dein Projekt. Cutter und Stauraum können einzeln ausgewählt werden.</p><div class="grid"><label>Fahrzeug<select id="vehicleType"><option value="buggy">Buggy</option><option value="sandbike">Sandbike</option><option value="ornithopter">Ornithopter</option><option value="carrier">Frachtthopter</option></select></label><label>Stufe<select id="vehicleTier"><option value="3">Typ 3</option><option value="4">Typ 4</option><option value="5" selected>Typ 5</option><option value="6">Typ 6</option></select></label></div><div id="vehicleParts"></div><button id="addVehicle">Ausgewählte Teile übernehmen</button><h2>Vorbereitete Bauvorhaben</h2><p class="muted">Mit belegten Pflichtteilen und Stückzahlen. Zusätzliche Module lassen sich anschließend frei ergänzen.</p><button id="presetBuggy" class="primary">Buggy Typ 5 · Cutteray + Stauraum</button><button id="presetCarrier" class="primary">Frachtthopter Typ 6 · Buggy-Transport</button><p id="presetStatus" class="muted" aria-live="polite"></p></section>
 <section><h2>Sicherung und Übertragung</h2><p class="muted">Bei einer eigenständig installierten neuen App-Version werden vorhandene Daten nicht automatisch übernommen. Hier kannst du Projekte, Rezepte und Lagerbestand als Text sichern und übertragen.</p><div class="grid"><button id="exportData">Sicherung anzeigen</button><button id="importData">Eingefügten Text übernehmen</button></div><label>Sicherungstext<textarea id="backupText" rows="3" spellcheck="false" placeholder="Sicherungstext zum Kopieren oder Einfügen"></textarea></label></section>
 <section><h2>Gesamtberechnung</h2><button class="primary" id="calculate">Materialbedarf berechnen</button><div id="results" aria-live="polite"></div><h2>Projekte vergleichen</h2><label>Vergleichen mit<select id="compareProject"></select></label><button id="compareButton">Zusätzlichen Materialbedarf anzeigen</button><div id="comparison" aria-live="polite"></div></section>
 <script src="items.js"></script><script src="extra.js"></script><script src="recipes.js"></script><script>
@@ -129,10 +129,39 @@ $('compareButton').onclick=()=>{
 };
 const data=$('itemOptions');const names=new Set([...items.map(x=>canonical(x.name)).filter(Boolean),...Object.values(gameNames)]);Object.values(extra.vendors||{}).forEach(v=>(v.goods||[]).forEach(g=>{if(g[0])names.add(g[0])}));[...names].sort((a,b)=>a.localeCompare(b,'de')).forEach(name=>{const o=document.createElement('option');o.value=name;data.append(o)});
 
+const presetDefinitions={
+ buggy:[
+ ['Buggy, Chassis Typ 5',1],['Buggy, Rumpf Typ 5',1],['Buggy, Heckerweiterung Typ 5',1],
+ ['Buggy, Triebwerk Typ 5',1],['Buggy, Energieeinheit Typ 5',1],['Buggy, Kette Typ 5',4],
+ ['Buggy, Cutteray Typ 5',1],['Buggy, Stauraum Typ 5',1]
+ ],
+ carrier:[
+ ['Frachtthopter, Chassis Typ 6',1],['Frachtthopter, Hauptrumpf Typ 6',1],
+ ['Frachtthopter, Seitenpanzerung Typ 6',2],['Frachtthopter, Heckpanzerung Typ 6',2],
+ ['Frachtthopter, Triebwerk Typ 6',1],['Frachtthopter, Generator Typ 6',1],
+ ['Frachtthopter, Flügel Typ 6',8]
+ ]
+};
+function addPreset(which){
+ const wanted=presetDefinitions[which],miss=[];
+ wanted.forEach(([official,qty])=>{
+   const found=Object.entries(gameNames).find(([id,name])=>norm(name)===norm(official));
+   const name=found?found[1]:official;
+   if(!found||!gameItems[found[0]])miss.push(official);
+   const current=project().items.find(it=>norm(it.name)===norm(name));
+   if(current)current.qty+=qty;else project().items.push({name,qty});
+ });
+ save();render();calculate();
+ $('presetStatus').textContent=miss.length?
+   'Prüfe diese noch nicht zugeordneten Rezeptdaten: '+miss.join(', '):
+   'Bauplan übernommen. Bereits vorhandene Teile kannst du im Lager eintragen.';
+}
+$('presetBuggy').onclick=()=>addPreset('buggy');
+$('presetCarrier').onclick=()=>addPreset('carrier');
 function renderVehicle(){
  const root=$('vehicleParts');root.replaceChildren();
  const type=$('vehicleType').value,tier=$('vehicleTier').value;
- const words=type==='carrier'?['carrier','cargo','carryall','carry-all','frachtthopter','transportornithopter']:type==='ornithopter'?['ornithopter','scoutthopter','assaultthopter']:type==='sandbike'?['sandbike','sand bike']:['buggy'];
+ const words=type==='carrier'?['carrier','cargo','carryall','carry-all','frachtthopter','ornithoptertransport','transportornithopter']:type==='ornithopter'?['ornithopter','scoutthopter','assaultthopter']:type==='sandbike'?['sandbike','sand bike']:['buggy'];
  const candidates=Object.entries(gameItems).filter(([id,rec])=>{
    const hay=(id+' '+codeName(id)).toLowerCase();
    return words.some(w=>hay.includes(w)) && (hay.includes('t'+tier)||hay.includes('typ '+tier)||hay.includes('mk'+tier)||hay.includes('tier'+tier));
@@ -141,7 +170,8 @@ function renderVehicle(){
  candidates.forEach(([id])=>{
    const line=elt('label','');line.className='line';
    const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.value=id;checkbox.style.width='25px';checkbox.style.minHeight='25px';
-   line.append(checkbox,elt('span',codeName(id)));root.append(line);
+   const qty=document.createElement('input');qty.type='number';qty.min='1';qty.max='99';qty.value=(id.includes('ornithoptertransportlocomotion')?'8':id.includes('ornithoptertransporthullfront')||id.includes('ornithoptertransporthullback')?'2':id.includes('buggy')&&(id.includes('track')||id.includes('tread')||id.includes('locomotion'))?'4':'1');qty.style.width='70px';qty.setAttribute('aria-label','Anzahl '+codeName(id));
+   line.append(checkbox,elt('span',codeName(id)),qty);root.append(line);
  });
 }
 $('vehicleType').onchange=renderVehicle;
@@ -149,8 +179,8 @@ $('vehicleTier').onchange=renderVehicle;
 $('addVehicle').onclick=()=>{
  let added=0;
  $('vehicleParts').querySelectorAll('input:checked').forEach(c=>{
-  const name=codeName(c.value),arr=project().items,found=arr.find(x=>norm(x.name)===norm(name));
-  if(found)found.qty++;else arr.push({name,qty:1});added++;
+  const name=codeName(c.value),qty=number(c.closest('label').querySelector('input[type=number]').value),arr=project().items,found=arr.find(x=>norm(x.name)===norm(name));
+  if(!qty)return;if(found)found.qty+=qty;else arr.push({name,qty});added+=qty;
  });
  if(!added){alert('Bitte zuerst Bauteile auswählen.');return}
  save();render();calculate();renderVehicle();
