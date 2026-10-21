@@ -1,0 +1,34 @@
+import {chromium} from 'playwright-core';
+import {existsSync} from 'node:fs';
+import {join,dirname,resolve} from 'node:path';
+import {fileURLToPath,pathToFileURL} from 'node:url';
+import assert from 'node:assert/strict';
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
+const browser=await chromium.launch({executablePath:['/usr/bin/chromium','/usr/bin/google-chrome'].find(existsSync),args:['--no-sandbox']});
+try{
+ const page=await browser.newPage({viewport:{width:400,height:800}});
+ const errs=[];page.on('pageerror',e=>errs.push(e.message));
+ await page.goto(pathToFileURL(join(root,'app/src/main/assets/index.html')).href);
+ await page.locator('#search').fill('Buggy');
+ assert.match(await page.locator('#suggestions .suggest').first().innerText(),/Fahrzeugbau/);
+ await page.locator('#suggestions .suggest').first().click();
+ await page.waitForURL(/vehicle.html/);
+ assert.equal(await page.locator('#purpose').inputValue(),'both');
+ assert.equal(await page.locator('#tier').inputValue(),'5');
+ const parts=await page.locator('#parts').innerText();
+ assert.ok(parts.includes('Cutteray Typ 5')&&parts.includes('Stauraum Typ 5'));
+ const old=await page.evaluate(()=>VP.c.calculate(VP.planned.filter(x=>x.enabled),VP.db.stock));
+ assert.ok(old.gather.water>0,'Missing water from recipe total');
+ await page.locator('#stockItem').fill('Buggy, Cutteray Typ 5');
+ await page.locator('#addStock').click();
+ const now=await page.evaluate(()=>VP.c.calculate(VP.planned.filter(x=>x.enabled),VP.db.stock));
+ assert.equal(now.used.buggymining_5,1);
+ assert.ok(now.gather.water<old.gather.water,'Inventory subtraction failed');
+ await page.locator('#vehicle').selectOption('carrier');
+ assert.equal(await page.locator('#purpose').inputValue(),'vehicles');
+ assert.equal(await page.evaluate(()=>VP.planned.find(x=>x.id==='ornithoptertransportlocomotion_6').qty),8);
+ await page.locator('#saveProject').click();
+ assert.match(await page.locator('#saveMessage').innerText(),/gespeichert/);
+ assert.deepEqual(errs,[]);
+ console.log('PASS: Vehicle purpose, recipes, inventory and carrier.');
+}finally{await browser.close()}
